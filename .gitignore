@@ -1,0 +1,7 @@
+.DS_Store
+Thumbs.db
+@eaDir/
+#recycle/
+.vscode/
+node_modules/
+*.log
