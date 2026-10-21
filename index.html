@@ -11,13 +11,6 @@
     --tinte: #4a3b30;
     --tinte-hell: #8a7766;
     --holz-dunkel: #85552f;
-    /* Regaloptik (wird per Einstellung überschrieben) */
-    --h-linie: #cfa175;
-    --h-oben: #cfa175;
-    --h-mitte: #a8734a;
-    --h-unten: #85552f;
-    --h-kante: #6b4024;
-    --maser: 1;
     /* Thema */
     --text: #4a3b30;
     --text-hell: #8a7766;
@@ -98,44 +91,21 @@
     25% { transform: translateX(-4%) rotate(-3deg); }
     75% { transform: translateX(4%) rotate(3deg); }
   }
+  /* Das Regal selbst ist ein gezeichnetes Bild (SVG) hinter den Gegenständen.
+     .holz ist nur noch die unsichtbare Fläche der Vorderkante für das Leuchten. */
+  .regal { position: relative; }
+  .regal-bild { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  .brett { z-index: 1; }
+  .plaetze { bottom: 15px; }
+  .regal.dreid { padding: 26px 14px 20px; }
+  .dreid .plaetze { bottom: 17px; }
   .holz {
     position: absolute; left: 0; right: 0; bottom: 0; height: 13px;
-    border-radius: 3px;
-    background:
-      linear-gradient(var(--h-linie) 0 3px, transparent 3px),
-      linear-gradient(var(--h-mitte), var(--h-unten));
-    box-shadow: 0 1px 0 var(--h-kante), 0 7px 8px -5px rgba(40,25,10,.45);
+    border-radius: 2px;
     transition: box-shadow .3s;
   }
-  .holz::after {
-    content: ""; position: absolute; inset: 3px 0 0; border-radius: 0 0 3px 3px;
-    background: repeating-linear-gradient(90deg, rgba(255,255,255,0) 0 23px, rgba(255,255,255,.08) 23px 26px, rgba(0,0,0,0) 26px 61px, rgba(60,30,10,.1) 61px 63px);
-    opacity: var(--maser);
-  }
-  .brett.aktiv .holz { box-shadow: 0 1px 0 var(--h-kante), 0 7px 8px -5px rgba(40,25,10,.45), 0 0 0 2px rgba(255,248,230,.9), 0 0 14px 2px rgba(212,174,87,.6); }
-  .brett.fertig .holz { box-shadow: 0 1px 0 var(--h-kante), 0 7px 8px -5px rgba(40,25,10,.45), 0 0 10px 1px rgba(212,174,87,.55); }
-
-  /* 3D-Regal: Oberseite der Bretter, Rückwand, Seitenwangen, Schattenwurf */
-  .regal.dreid { position: relative; padding: 0 13px; }
-  .regal.dreid::before, .regal.dreid::after {
-    content: ""; position: absolute; top: 0; bottom: 0; width: 11px; border-radius: 3px;
-    background: linear-gradient(90deg, var(--h-oben), var(--h-mitte) 55%, var(--h-unten));
-    box-shadow: 0 0 0 1px var(--h-kante), 0 6px 10px -4px rgba(40,25,10,.4);
-  }
-  .regal.dreid::before { left: 0; }
-  .regal.dreid::after { right: 0; transform: scaleX(-1); }
-  .dreid .brett::before {
-    content: ""; position: absolute; left: -2px; right: -2px; top: -8px; bottom: 12px;
-    background: linear-gradient(rgba(40,25,10,.17), rgba(40,25,10,.05) 45%, rgba(40,25,10,.12));
-    border-radius: 2px;
-  }
-  .dreid .holz::before {
-    content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 8px;
-    background: linear-gradient(var(--h-unten), var(--h-oben));
-    clip-path: polygon(1.8% 0, 98.2% 0, 100% 100%, 0 100%);
-  }
-  .dreid .plaetze { bottom: 15px; }
-  .dreid .ding svg { filter: drop-shadow(4px -2px 3px rgba(40,25,10,.2)); }
+  .brett.aktiv .holz { box-shadow: 0 0 0 2px rgba(255,248,230,.85), 0 0 16px 3px rgba(222,184,96,.7); }
+  .brett.fertig .holz { box-shadow: 0 0 12px 2px rgba(222,184,96,.55); }
 
   /* Effekte beim fertigen Brett */
   .effekt { position: absolute; inset: 0 8px 11px; pointer-events: none; display: grid; grid-template-columns: repeat(4, 1fr); }
@@ -192,7 +162,7 @@
 
   /* Gewinnkarte */
   .schleier {
-    position: fixed; inset: 0;
+    position: fixed; inset: 0; z-index: 10;
     background: rgba(74,59,48,.28);
     display: flex; align-items: center; justify-content: center;
     padding: 24px;
@@ -314,9 +284,8 @@
   .wahl .schloss { position: absolute; inset: 0; display: grid; place-items: center; color: #6d5a49; }
   .wahl .schloss svg { width: 22px; height: 22px; }
   .vorschau .wandbild { position: absolute; inset: 0; }
-  .vorschau .mini-holz { position: absolute; left: 10%; right: 10%; bottom: 16%; height: 8%; border-radius: 2px;
-    background: linear-gradient(var(--h-linie) 0 25%, var(--h-mitte) 25%, var(--h-unten)); box-shadow: 0 1px 0 var(--h-kante), 0 4px 5px -3px rgba(40,25,10,.4); }
-  .vorschau .mini-dinge { position: absolute; left: 14%; right: 14%; bottom: 24%; height: 52%; display: flex; align-items: flex-end; justify-content: center; gap: 2%; }
+  .vorschau .mini-regal { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .vorschau .mini-dinge { position: absolute; left: 18%; right: 18%; bottom: 29%; height: 40%; display: flex; align-items: flex-end; justify-content: center; gap: 2%; }
   .vorschau .mini-dinge svg { height: 100%; width: auto; flex: 0 1 auto; min-width: 0; }
   .zeile { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 54px; border-bottom: 1px solid #efe4d2; }
   .zeile .beschr { font-size: .95rem; }
@@ -1229,6 +1198,171 @@ const Puzzle = (() => {
 })();
 
 /* =====================================================================
+   REGAL-MÖBEL
+   Das ganze Regal wird als ein SVG gezeichnet und als Bild hinter die
+   Gegenstände gelegt. Holzmaserung entsteht prozedural (feTurbulence).
+   dreid = Korpus mit Rückwand, Innenseiten, Krone und Sockel in
+   Zentralperspektive; sonst Wandbretter auf Konsolen.
+   ===================================================================== */
+const Holz = (() => {
+  const ARTEN = [
+    { id: 'eiche',   name: 'Eiche',               ab: 0,  hell: '#d8ab7c', mitte: '#a9744b', dunkel: '#6c4428', maser: '#4a2a12', staerke: .45 },
+    { id: 'ahorn',   name: 'Ahorn hell',          ab: 0,  hell: '#f3e2c3', mitte: '#dcbd8f', dunkel: '#a8855a', maser: '#86603a', staerke: .3 },
+    { id: 'nuss',    name: 'Nussbaum',            ab: 0,  hell: '#ab7e58', mitte: '#76492d', dunkel: '#3f2617', maser: '#1f1008', staerke: .5 },
+    { id: 'altholz', name: 'Altes Bauernholz',    ab: 0,  hell: '#b9a68d', mitte: '#8c7760', dunkel: '#55463a', maser: '#2e241b', staerke: .75, alt: true },
+    { id: 'weiss',   name: 'Weiß lackiert',       ab: 3,  hell: '#ffffff', mitte: '#f2ede4', dunkel: '#c9bfae', maser: '#8a7f6e', staerke: .1, lack: true },
+    { id: 'salbei',  name: 'Salbei lackiert',     ab: 8,  hell: '#e4ecdd', mitte: '#adc2a2', dunkel: '#6f8765', maser: '#475a40', staerke: .12, lack: true },
+    { id: 'antik',   name: 'Antik mit Goldkante', ab: 15, hell: '#9d6e48', mitte: '#6b4229', dunkel: '#382111', maser: '#160b04', staerke: .5, gold: '#dcb965' },
+  ];
+  const finde = (id) => ARTEN.find((a) => a.id === id) || ARTEN[0];
+  const r1 = (v) => Math.round(v * 10) / 10;
+  const rgb01 = (h) => { const n = parseInt(h.slice(1), 16); return [(n >> 16) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255].map((x) => x.toFixed(3)); };
+  const rechteck = (x, y, w, h) => `M${r1(x)} ${r1(y)}h${r1(w)}v${r1(h)}h${r1(-w)}Z`;
+  const vieleck = (...p) => 'M' + p.map(([x, y]) => `${r1(x)} ${r1(y)}`).join(' L') + 'Z';
+  const B = 13; // Brettstärke vorn (muss zu .holz passen)
+
+  function zeichne(o) {
+    const h = finde(o.holz);
+    const zufall = Grafik.rng(o.seed || 11);
+    const zw = (a, b) => a + zufall() * (b - a);
+    const [mr, mg, mb] = rgb01(h.maser);
+    const k = (3 * h.staerke).toFixed(3), c = (-1.32 * h.staerke).toFixed(3);
+    const maserFilter = (id, bf, seed) => `<filter id="${id}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">`
+      + `<feTurbulence type="fractalNoise" baseFrequency="${bf}" numOctaves="3" seed="${seed}"/>`
+      + `<feColorMatrix type="matrix" values="0 0 0 0 ${mr} 0 0 0 0 ${mg} 0 0 0 0 ${mb} ${k} 0 0 0 ${c}"/>`
+      + '<feComposite in2="SourceGraphic" operator="in"/></filter>';
+    const defs = [
+      maserFilter('mh', h.lack ? '0.003 0.09' : h.alt ? '0.004 0.16' : '0.006 0.22', 3),
+      maserFilter('mv', h.lack ? '0.09 0.003' : h.alt ? '0.16 0.004' : '0.22 0.006', 8),
+      '<filter id="weich" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="6"/></filter>',
+      '<filter id="weich2" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="2.6"/></filter>',
+      '<linearGradient id="gFront" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".2"/><stop offset=".3" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".2"/></linearGradient>',
+      '<linearGradient id="gOben" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".34"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>',
+      '<linearGradient id="gSchatten" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".5"/><stop offset=".35" stop-color="#000" stop-opacity=".18"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>',
+      '<linearGradient id="gRueck" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".42"/><stop offset=".18" stop-color="#000" stop-opacity=".22"/><stop offset=".82" stop-color="#000" stop-opacity=".22"/><stop offset="1" stop-color="#000" stop-opacity=".42"/></linearGradient>',
+      '<linearGradient id="gSeite" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></linearGradient>',
+      '<linearGradient id="gEisen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6b625a"/><stop offset=".5" stop-color="#3a332d"/><stop offset="1" stop-color="#211c18"/></linearGradient>',
+    ];
+    const flaeche = (d, farbe, maser) => `<path d="${d}" fill="${farbe}"/>` + (maser ? `<path d="${d}" fill="#000" filter="url(#${maser})"/>` : '');
+
+    // Gebrauchsspuren für altes Holz: Äste, Risse, Nägel, abgestoßene Kanten
+    function alterung(x, y, w, hh, quer) {
+      if (!h.alt) return '';
+      let a = '';
+      const n = Math.max(1, Math.round((quer ? w : hh) / 140 + zw(0, 1.4)));
+      for (let i = 0; i < n; i++) {
+        const ax = quer ? x + zw(.12, .88) * w : x + w / 2 + zw(-.15, .15) * w;
+        const ay = quer ? y + hh * zw(.35, .65) : y + zw(.1, .9) * hh;
+        const rx = quer ? zw(3.5, 6.5) : Math.min(w * .28, 3.2), ry = quer ? Math.min(hh * .26, 2.6) : zw(4, 7);
+        a += `<ellipse cx="${r1(ax)}" cy="${r1(ay)}" rx="${r1(rx * 1.8)}" ry="${r1(ry * 1.5)}" fill="${h.dunkel}" opacity=".18"/>`;
+        a += `<ellipse cx="${r1(ax)}" cy="${r1(ay)}" rx="${r1(rx)}" ry="${r1(ry)}" fill="${h.dunkel}" opacity=".55"/>`;
+        a += `<ellipse cx="${r1(ax - rx * .2)}" cy="${r1(ay - ry * .2)}" rx="${r1(rx * .45)}" ry="${r1(ry * .4)}" fill="${h.maser}" opacity=".5"/>`;
+      }
+      if (quer && w > 60) {
+        const rx0 = x + zw(.05, .6) * w, len = zw(25, 70), ry0 = y + hh * zw(.3, .7);
+        a += `<path d="M${r1(rx0)} ${r1(ry0)} q${r1(len * .3)} -1 ${r1(len * .5)} .6 t${r1(len * .5)} -.4" fill="none" stroke="#1d150f" stroke-width=".7" opacity=".55"/>`;
+        for (const nx of [x + 6, x + w - 6]) {
+          a += `<circle cx="${r1(nx)}" cy="${r1(y + hh / 2)}" r="1.5" fill="#2a231e"/><circle cx="${r1(nx - .4)}" cy="${r1(y + hh / 2 - .5)}" r=".5" fill="#9a8f84"/>`;
+        }
+        // abgestoßene Kante oben
+        let p = `M${r1(x)} ${r1(y)}`;
+        for (let xx = x; xx < x + w; xx += 6) p += ` L${r1(xx + 3)} ${r1(y + zw(0, 1.4))} L${r1(xx + 6)} ${r1(y)}`;
+        a += `<path d="${p}" fill="none" stroke="${h.hell}" stroke-width="1.1" opacity=".7"/>`;
+      }
+      return a;
+    }
+
+    // Sichtkante eines Bretts
+    function vorderkante(x, y, w, hh) {
+      let s = flaeche(rechteck(x, y, w, hh), h.mitte, 'mh');
+      s += alterung(x, y, w, hh, true);
+      s += `<path d="${rechteck(x, y, w, hh)}" fill="url(#gFront)"/>`;
+      s += `<rect x="${r1(x)}" y="${r1(y)}" width="${r1(w)}" height="1.2" fill="${h.hell}" opacity="${h.lack ? 1 : .8}"/>`;
+      s += `<rect x="${r1(x)}" y="${r1(y + hh - 1)}" width="${r1(w)}" height="1" fill="#000" opacity=".28"/>`;
+      if (h.gold) s += `<rect x="${r1(x + 2)}" y="${r1(y + 3.2)}" width="${r1(w - 4)}" height="1.1" fill="${h.gold}"/><rect x="${r1(x + 2)}" y="${r1(y + hh - 3.6)}" width="${r1(w - 4)}" height=".7" fill="${h.gold}" opacity=".7"/>`;
+      if (h.lack) s += `<rect x="${r1(x + w * .08)}" y="${r1(y + 2.6)}" width="${r1(w * .55)}" height="1" rx=".5" fill="#fff" opacity=".45"/>`;
+      return s;
+    }
+
+    const { W, H, L, R, bretter } = o;
+    let s = '';
+    if (o.dreid) {
+      const dx = 11, dy = 9, seite = 12, krone = 18, sockel = 16;
+      const oben = bretter[0].top - krone - 6, unten = bretter[bretter.length - 1].bottom + sockel;
+      const innenOben = oben + krone;
+      // Schlagschatten des Möbels auf der Wand
+      s += `<rect x="${r1(L - seite - 2)}" y="${r1(oben + 10)}" width="${r1(R - L + 2 * seite + 4)}" height="${r1(unten - oben - 4)}" rx="4" fill="#000" opacity=".3" filter="url(#weich)"/>`;
+      // Rückwand aus senkrechten Brettern
+      const rueck = rechteck(L, innenOben, R - L, bretter[bretter.length - 1].bottom - B - innenOben);
+      s += flaeche(rueck, h.mitte, 'mv');
+      const nPl = Math.max(3, Math.round((R - L) / 64));
+      for (let i = 1; i < nPl; i++) {
+        const x = L + ((R - L) * i) / nPl;
+        s += `<rect x="${r1(x)}" y="${r1(innenOben)}" width="1.2" height="${r1(unten - innenOben)}" fill="#000" opacity=".35"/><rect x="${r1(x + 1.2)}" y="${r1(innenOben)}" width=".8" height="${r1(unten - innenOben)}" fill="#fff" opacity=".12"/>`;
+      }
+      s += `<path d="${rueck}" fill="url(#gRueck)"/>`;
+      // Fächer
+      bretter.forEach((b, i) => {
+        const ct = i === 0 ? innenOben : bretter[i - 1].bottom;
+        const ft = b.bottom - B;
+        s += `<rect x="${r1(L)}" y="${r1(ct)}" width="${r1(R - L)}" height="${r1(Math.min(30, (ft - ct) * .5))}" fill="url(#gSchatten)"/>`;
+        const li = vieleck([L, ct], [L + dx, ct], [L + dx, ft - dy], [L, ft]);
+        const re = vieleck([R, ct], [R - dx, ct], [R - dx, ft - dy], [R, ft]);
+        s += flaeche(li, h.mitte, 'mv') + `<path d="${li}" fill="#000" opacity=".36"/>`;
+        s += flaeche(re, h.mitte, 'mv') + `<path d="${re}" fill="#000" opacity=".1"/>`;
+        const ob = vieleck([L, ft], [L + dx, ft - dy], [R - dx, ft - dy], [R, ft]);
+        s += flaeche(ob, h.hell, 'mh') + `<path d="${ob}" fill="url(#gOben)"/>`;
+        s += vorderkante(L, ft, R - L, B);
+      });
+      // Seitenwangen
+      for (const x of [L - seite, R]) {
+        const p = rechteck(x, innenOben - 2, seite, unten - sockel - innenOben + 2);
+        s += flaeche(p, h.mitte, 'mv');
+        s += `<path d="${p}" fill="url(#gSeite)"/>`;
+        s += `<rect x="${r1(x)}" y="${r1(innenOben - 2)}" width="1" height="${r1(unten - sockel - innenOben + 2)}" fill="${h.hell}" opacity=".6"/>`;
+        s += `<rect x="${r1(x + seite - 1)}" y="${r1(innenOben - 2)}" width="1" height="${r1(unten - sockel - innenOben + 2)}" fill="#000" opacity=".3"/>`;
+      }
+      // Krone mit Profil
+      const kx = L - seite - 5, kw = R - L + 2 * seite + 10;
+      s += flaeche(rechteck(kx, oben, kw, krone), h.mitte, 'mh') + `<path d="${rechteck(kx, oben, kw, krone)}" fill="url(#gFront)"/>`;
+      s += `<rect x="${r1(kx)}" y="${r1(oben)}" width="${r1(kw)}" height="3" fill="${h.hell}" opacity=".85"/>`;
+      s += `<rect x="${r1(kx + 2)}" y="${r1(oben + krone * .45)}" width="${r1(kw - 4)}" height="1.2" fill="#000" opacity=".3"/><rect x="${r1(kx + 2)}" y="${r1(oben + krone * .45 + 1.2)}" width="${r1(kw - 4)}" height=".8" fill="#fff" opacity=".2"/>`;
+      s += flaeche(rechteck(kx + 3, oben + krone - 4.5, kw - 6, 4.5), h.dunkel, 'mh');
+      if (h.gold) s += `<rect x="${r1(kx + 3)}" y="${r1(oben + krone * .45 - 2.6)}" width="${r1(kw - 6)}" height="1" fill="${h.gold}"/>`;
+      s += alterung(kx, oben, kw, krone, true);
+      // Sockel
+      const sx = L - seite - 1, sw = R - L + 2 * seite + 2;
+      s += flaeche(rechteck(sx, unten - sockel, sw, sockel), h.dunkel, 'mh') + `<path d="${rechteck(sx, unten - sockel, sw, sockel)}" fill="url(#gFront)"/>`;
+      s += `<rect x="${r1(sx)}" y="${r1(unten - sockel)}" width="${r1(sw)}" height="2" fill="#000" opacity=".3"/>`;
+      if (h.gold) s += `<rect x="${r1(sx + 3)}" y="${r1(unten - sockel + 5)}" width="${r1(sw - 6)}" height="1" fill="${h.gold}" opacity=".8"/>`;
+    } else {
+      // Wandbretter auf schmiedeeisernen Konsolen
+      bretter.forEach((b) => {
+        const ft = b.bottom - B, w = R - L;
+        s += `<rect x="${r1(L + 6)}" y="${r1(ft + B - 3)}" width="${r1(w - 12)}" height="9" rx="4" fill="#000" opacity=".32" filter="url(#weich2)"/>`;
+        for (const [x, dir] of [[L + w * .13, 1], [R - w * .13, -1]]) {
+          const y0 = ft + B;
+          s += `<path d="M${r1(x)} ${r1(y0)} L${r1(x)} ${r1(y0 + 19)} M${r1(x)} ${r1(y0 + 17)} C${r1(x + dir * 2)} ${r1(y0 + 6)} ${r1(x + dir * 9)} ${r1(y0 + 2)} ${r1(x + dir * 16)} ${r1(y0 + 1)}" fill="none" stroke="url(#gEisen)" stroke-width="2.6" stroke-linecap="round"/>`;
+          s += `<circle cx="${r1(x + dir * 5.5)}" cy="${r1(y0 + 6.5)}" r="2.2" fill="none" stroke="#2c2621" stroke-width="1.4"/>`;
+          s += `<circle cx="${r1(x)}" cy="${r1(y0 + 15)}" r="1" fill="#8a8178"/>`;
+        }
+        const ob = vieleck([L, ft], [L + 4, ft - 4], [R - 4, ft - 4], [R, ft]);
+        s += flaeche(ob, h.hell, 'mh') + `<path d="${ob}" fill="url(#gOben)"/>`;
+        s += vorderkante(L, ft, w, B);
+      });
+    }
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${r1(W)}" height="${r1(H)}" viewBox="0 0 ${r1(W)} ${r1(H)}"><defs>${defs.join('')}</defs>${s}</svg>`;
+  }
+
+  const alsBild = (svg) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+
+  // Kleines Musterregal für das Einstellungsmenü
+  const vorschau = (id, dreid) => alsBild(zeichne({ W: 120, H: 120, L: 20, R: 100, bretter: [{ top: 34, bottom: 98 }], holz: id, dreid, seed: 5 }));
+
+  return { ARTEN, finde, zeichne, alsBild, vorschau };
+})();
+
+/* =====================================================================
    THEMEN, TAPETEN, REGALE
    Tapeten sind parametrisch erzeugte SVG-Kacheln (als data-URL im CSS).
    ab = nach welchem geschafften Regal freigeschaltet (0 = sofort).
@@ -1275,14 +1409,7 @@ const Einrichtung = (() => {
     { id: 'herbst',       name: 'Herbstlaube',   ab: 20, farbe: '#f0d9bc', akzent: '#ddb084', drei: '#c47b48', muster: ['blaetter', 'karo', 'rauten'] },
   ];
 
-  const REGALE = [
-    { id: 'eiche',  name: 'Eiche',               ab: 0,  oben: '#cfa175', mitte: '#a8734a', unten: '#85552f', kante: '#6b4024' },
-    { id: 'ahorn',  name: 'Ahorn hell',          ab: 0,  oben: '#efd9b2', mitte: '#d8b887', unten: '#bf9866', kante: '#99744a' },
-    { id: 'nuss',   name: 'Nussbaum',            ab: 0,  oben: '#a97c55', mitte: '#7b5033', unten: '#5c3a23', kante: '#3e2414' },
-    { id: 'weiss',  name: 'Weiß lackiert',       ab: 3,  oben: '#ffffff', mitte: '#f1ece3', unten: '#d9d1c3', kante: '#b3a895', glatt: true },
-    { id: 'salbei', name: 'Salbei lackiert',     ab: 8,  oben: '#dbe6d2', mitte: '#adc2a2', unten: '#8fa785', kante: '#6c8463', glatt: true },
-    { id: 'antik',  name: 'Antik mit Goldkante', ab: 15, oben: '#9a6b46', mitte: '#6e4529', unten: '#50301b', kante: '#2f1a0d', linie: '#d9b562' },
-  ];
+  const REGALE = Holz.ARTEN;
 
   const STANDARD = { thema: 'bibliothek', regal: 'eiche', dreiD: true, begruessung: true };
 
@@ -1290,12 +1417,7 @@ const Einrichtung = (() => {
   const licht = (thema) => thema.dunkel
     ? 'radial-gradient(80% 50% at 50% 0%, rgba(255,214,140,.30), rgba(255,214,140,0) 72%)'
     : 'radial-gradient(120% 70% at 50% 0%, rgba(255,250,240,.6), rgba(255,250,240,0) 70%)';
-  const regalVars = (r) => ({
-    '--h-linie': r.linie || r.oben, '--h-oben': r.oben, '--h-mitte': r.mitte, '--h-unten': r.unten,
-    '--h-kante': r.kante, '--maser': r.glatt ? 0 : 1,
-  });
-
-  return { THEMEN, REGALE, STANDARD, tapete, licht, regalVars };
+  return { THEMEN, REGALE, STANDARD, tapete, licht };
 })();
 
 /* =====================================================================
@@ -1358,6 +1480,11 @@ function dingEl(ding) {
 
 function baueBretter(anzahl) {
   regalEl.innerHTML = '';
+  const bild = document.createElement('img');
+  bild.className = 'regal-bild';
+  bild.alt = '';
+  bild.setAttribute('aria-hidden', 'true');
+  regalEl.appendChild(bild);
   for (let i = 0; i < anzahl; i++) {
     const brett = document.createElement('div');
     brett.className = 'brett';
@@ -1386,7 +1513,7 @@ function zeichne(bewegt = []) {
     const el = dingEls.get(id);
     if (el && el.isConnected) vorher.set(id, el.getBoundingClientRect());
   }
-  const bretter = regalEl.children;
+  const bretter = regalEl.querySelectorAll('.brett');
   spiel.regal.forEach((brett, i) => {
     const plaetze = bretter[i].querySelector('.plaetze').children;
     for (let j = 0; j < Puzzle.KAPAZITAET; j++) {
@@ -1506,7 +1633,7 @@ function blueteSvg(farbe) {
 }
 
 function feiereBrett(i) {
-  const brettEl = regalEl.children[i];
+  const brettEl = regalEl.querySelectorAll('.brett')[i];
   if (!brettEl) return;
   const art = spiel.regal[i][0].art;
   const fx = document.createElement('div');
@@ -1532,7 +1659,7 @@ function zeigeGewinn() {
     ? '<span style="font-size:.85rem;color:var(--tinte-hell)">Neu zum Einrichten:</span>' + neu.map(([art, x]) => {
         const bild = art === 'Tapete'
           ? `background:${Einrichtung.tapete(x, 0)}`
-          : `background:linear-gradient(${x.linie || x.oben} 0 30%, ${x.mitte} 30%, ${x.unten})`;
+          : `background:linear-gradient(${x.gold || x.hell} 0 22%, ${x.mitte} 22%, ${x.dunkel})`;
         return `<span class="chip"><span class="punkt" style='${bild}'></span>${art} <b>${x.name}</b></span>`;
       }).join('')
     : '';
@@ -1603,13 +1730,34 @@ function wendeEinrichtungAn() {
   const t = e.themaObj;
   root.setProperty('--wand', `${Einrichtung.licht(t)}, ${Einrichtung.tapete(t, spiel.level - 1)}`);
   root.setProperty('--wand-farbe', t.farbe);
-  for (const [k, v] of Object.entries(Einrichtung.regalVars(e.regalObj))) root.setProperty(k, v);
   document.body.classList.toggle('dunkel', !!t.dunkel);
   root.setProperty('--text', t.dunkel ? '#f3e9d6' : '#4a3b30');
   root.setProperty('--text-hell', t.dunkel ? '#c8bca6' : '#8a7766');
   document.querySelector('meta[name="theme-color"]').setAttribute('content', t.farbe);
   regalEl.classList.toggle('dreid', !!e.dreiD);
+  regalSchluessel = '';
+  planeRegalBild();
 }
+
+/* ---------- Regal-Möbel zeichnen ---------- */
+let regalSchluessel = '';
+function zeichneRegalBild() {
+  const bild = regalEl.querySelector('.regal-bild');
+  const bretter = regalEl.querySelectorAll('.brett');
+  if (!bild || !bretter.length) return;
+  const e = einstellung();
+  const r0 = regalEl.getBoundingClientRect();
+  const liste = [...bretter].map((b) => { const r = b.getBoundingClientRect(); return { top: r.top - r0.top, bottom: r.bottom - r0.top, left: r.left - r0.left, right: r.right - r0.left }; });
+  const o = { W: r0.width, H: r0.height, L: liste[0].left, R: liste[0].right, bretter: liste, holz: e.regalObj.id, dreid: !!e.dreiD, seed: spiel.level * 13 + 5 };
+  const schluessel = JSON.stringify(o);
+  if (schluessel === regalSchluessel) return;
+  regalSchluessel = schluessel;
+  bild.src = Holz.alsBild(Holz.zeichne(o));
+}
+let regalRaf = 0;
+const planeRegalBild = () => { cancelAnimationFrame(regalRaf); regalRaf = requestAnimationFrame(zeichneRegalBild); };
+if (window.ResizeObserver) new ResizeObserver(planeRegalBild).observe(regalEl);
+else window.addEventListener('resize', planeRegalBild);
 
 /* ---------- Einstellungsmenü ---------- */
 const SCHLOSS = '<span class="schloss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
@@ -1623,12 +1771,12 @@ function wahlKnopf(gruppe, x, aktiv, vorschau) {
 
 function baueEinstellungen() {
   const e = einstellung();
-  const holzStil = (r) => Object.entries(Einrichtung.regalVars(r)).map(([k, v]) => `${k}:${v}`).join(';');
+  const miniRegal = (id, dreid = !!e.dreiD) => `<img class="mini-regal" alt="" src="${Holz.vorschau(id, dreid)}">`;
   const miniDinge = `<span class="mini-dinge">${Grafik.ARTEN.buchRot.zeichne(7)}${Grafik.ARTEN.teekanne.zeichne(64)}${Grafik.ARTEN.pflanze.zeichne(412)}</span>`;
   $('themenRaster').innerHTML = Einrichtung.THEMEN.map((t) => wahlKnopf('thema', t, t.id === e.themaObj.id,
-    `<span class="wandbild" style='background:${Einrichtung.licht(t)}, ${Einrichtung.tapete(t, 0)}'></span><span class="mini-holz" style="${holzStil(e.regalObj)}"></span>`)).join('');
+    `<span class="wandbild" style='background:${Einrichtung.licht(t)}, ${Einrichtung.tapete(t, 0)}'></span>${miniRegal(e.regalObj.id, false)}`)).join('');
   $('regalRaster').innerHTML = Einrichtung.REGALE.map((r) => wahlKnopf('regal', r, r.id === e.regalObj.id,
-    `<span class="wandbild" style='background:${Einrichtung.tapete(e.themaObj, 0)}'></span>${miniDinge}<span class="mini-holz" style="${holzStil(r)}"></span>`)).join('');
+    `<span class="wandbild" style='background:${Einrichtung.tapete(e.themaObj, 0)}'></span>${miniRegal(r.id)}${miniDinge}`)).join('');
   $('schalter3d').checked = !!e.dreiD;
   $('schalterBegruessung').checked = e.begruessung !== false;
   $('fussText').textContent = `${speicher.geschafft} ${speicher.geschafft === 1 ? 'Regal' : 'Regale'} sortiert`;
@@ -1658,7 +1806,7 @@ $('einstellungen').addEventListener('click', (ev) => {
   setzeEinstellung(k.dataset.gruppe, k.dataset.id);
   baueEinstellungen();
 });
-$('schalter3d').addEventListener('change', (ev) => setzeEinstellung('dreiD', ev.target.checked));
+$('schalter3d').addEventListener('change', (ev) => { setzeEinstellung('dreiD', ev.target.checked); baueEinstellungen(); });
 $('schalterBegruessung').addEventListener('change', (ev) => setzeEinstellung('begruessung', ev.target.checked));
 $('knopfAnleitung').addEventListener('click', () => { schliesseEinstellungen(); setTimeout(zeigeBegruessung, 250); });
 

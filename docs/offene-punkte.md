@@ -11,7 +11,7 @@
 - [ ] Feinschliff nach Test auf echtem Handy.
 
 ## Zu testen
-- [ ] Räumliche Regale: Schattenwurf (CSS-Filter) auf älteren Handys flüssig?
+- [ ] Regal-Bild (SVG mit feTurbulence) auf iPhone/Safari prüfen: Maserung sichtbar, Aufbau flüssig? Im Desktop-Chrome ca. 6 ms je Regal.
 - [ ] Dunkles Thema „Abendstunde“: Lesbarkeit der Gegenstände.
 - [ ] Level 21+ (8 Bretter): Gegenstände sind auf kleinen Handys recht klein. Auf echtem Gerät prüfen.
 - [ ] Sound auf iPhone (Stummschalter, Start nach erster Berührung).

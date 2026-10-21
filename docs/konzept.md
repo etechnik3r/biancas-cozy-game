@@ -62,7 +62,9 @@ Immer 2 leere Bretter mehr als Arten. Level werden zufällig erzeugt und vor der
 | Nordisch hell | Zickzack, Punkte, Rankgitter | nach Regal 12 |
 | Herbstlaube | Blätterranke, Karo, Rauten | nach Regal 20 |
 
-**Regale:** Eiche, Ahorn hell, Nussbaum (sofort), Weiß lackiert (nach Regal 3), Salbei lackiert (nach 8), Antik mit Goldkante (nach 15).
+**Regale:** Eiche, Ahorn hell, Nussbaum, Altes Bauernholz (sofort), Weiß lackiert (nach Regal 3), Salbei lackiert (nach 8), Antik mit Goldkante (nach 15).
+
+**Regal-Darstellung:** Das Regal wird als ein SVG-Bild hinter den Gegenständen gezeichnet (Modul `Holz`), passend zu den gemessenen Brett-Positionen und neu bei Größenänderung. Maserung per `feTurbulence`. Räumlich = Möbel in Zentralperspektive, flach = Wandbretter auf Konsolen.
 
 **Darstellung:** Räumliche Regale an/aus (Standard: an), Begrüßung beim Start an/aus. Außerdem: Anleitung ansehen, Spielstand löschen (mit Rückfrage).
 
