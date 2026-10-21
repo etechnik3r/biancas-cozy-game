@@ -8,7 +8,7 @@
 - [ ] **Liste der Deko-Varianten** pro Platz in der Leseecke festlegen.
 
 ## Nächste Schritte
-- [ ] Häppchen 1: Grafik-Musterblatt mit allen SVG-Generatoren.
+- [ ] Häppchen 1: Grafikstil mit Bastian abstimmen (Musterblatt liegt vor). Auffällig: Teekannen wirken in der 8-Bretter-Ansicht klein und blass.
 - [ ] Häppchen 2: Spielbares Puzzle.
 - [ ] Häppchen 3: Leseecke, Sound, Speichern, Feinschliff.
 

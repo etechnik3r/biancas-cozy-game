@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Biancas Leseecke – Musterblatt</title>
+<style>
+  :root {
+    --papier: #f6efe4;
+    --papier-dunkel: #ebe0cf;
+    --holz: #b4825a;
+    --holz-dunkel: #8a5d3b;
+    --holz-kante: #6e4529;
+    --tinte: #4a3b30;
+    --tinte-hell: #8a7766;
+    --akzent: #c8574d;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--papier);
+    color: var(--tinte);
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    line-height: 1.45;
+    padding: 20px 16px 48px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 1.55rem; margin: 0 0 4px; font-weight: normal; }
+  h2 { font-size: 1.15rem; margin: 32px 0 6px; font-weight: normal; border-bottom: 1px solid var(--papier-dunkel); padding-bottom: 4px; }
+  p { margin: 0 0 10px; }
+  .klein { color: var(--tinte-hell); font-size: .9rem; }
+  .knopfzeile { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 14px 0 0; }
+  button {
+    font: inherit;
+    background: var(--holz-dunkel);
+    color: #fff8ee;
+    border: 0;
+    border-radius: 999px;
+    padding: 10px 18px;
+    min-height: 44px;
+    cursor: pointer;
+  }
+  button:active { transform: translateY(1px); }
+  .raster {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+    gap: 8px;
+  }
+  .kachel {
+    background: #fffaf2;
+    border-radius: 12px;
+    padding: 6px 4px 2px;
+    box-shadow: 0 1px 0 var(--papier-dunkel);
+  }
+  .kachel svg { display: block; width: 100%; height: auto; }
+
+  /* Regal-Vorschau in Spielgröße */
+  .regal {
+    background: #efe2cd;
+    border-radius: 14px;
+    padding: 10px 10px 4px;
+    max-width: 375px;
+  }
+  .brett { position: relative; height: var(--brett-h, 64px); margin-bottom: 8px; }
+  .brett .plaetze {
+    position: absolute; inset: 0 6px 10px;
+    display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: 100%;
+  }
+  .brett .plaetze > div { min-height: 0; min-width: 0; }
+  .brett .plaetze svg { width: 100%; height: 100%; display: block; }
+  .brett .holz {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 12px;
+    background: linear-gradient(var(--holz) 0 60%, var(--holz-dunkel) 60%);
+    border-radius: 3px;
+    box-shadow: 0 2px 0 var(--holz-kante);
+  }
+</style>
+</head>
+<body>
+
+<h1>Biancas Leseecke</h1>
+<p class="klein">Grafik-Musterblatt · alle Gegenstände werden per Code aus Parametern gezeichnet, jede Variante ist etwas anders.</p>
+
+<div class="knopfzeile">
+  <button id="wuerfeln" type="button">Neue Varianten würfeln</button>
+  <span class="klein" id="seedAnzeige"></span>
+</div>
+
+<h2>So sieht es im Spiel aus</h2>
+<p class="klein">Originalgröße auf dem Handy bei 8 Brettern (schwerste Stufe). Darunter dieselben Gegenstände bei 5 Brettern.</p>
+<div class="regal" id="regalKlein" style="--brett-h:60px"></div>
+<div style="height:14px"></div>
+<div class="regal" id="regalGross" style="--brett-h:88px"></div>
+
+<div id="sektionen"></div>
+
+<script>
+/* =====================================================================
+   GRAFIK-GENERATOREN
+   Dieser Block wird später unverändert in index.html übernommen.
+   Jede Funktion liefert einen SVG-String mit viewBox 0 0 100 120.
+   Standfläche ist y = 116, damit alle Gegenstände auf dem Brett stehen.
+   ===================================================================== */
+const Grafik = (() => {
+  let uid = 0;
+  const id = (p) => `${p}${++uid}`;
+
+  // Kleiner, reproduzierbarer Zufallsgenerator (mulberry32)
+  function rng(seed) {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const zw = (r, a, b) => a + r() * (b - a);
+  const wahl = (r, liste) => liste[Math.floor(r() * liste.length)];
+
+  // Farbe leicht variieren (Helligkeit), damit Gegenstände lebendig wirken
+  function nuance(hex, betrag) {
+    const n = parseInt(hex.slice(1), 16);
+    const f = (c) => Math.max(0, Math.min(255, Math.round(c + betrag * 255)));
+    const r = f(n >> 16), g = f((n >> 8) & 255), b = f(n & 255);
+    return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
+  }
+
+  const PALETTE = {
+    buch: {
+      rot:   { grund: '#c8574d', schatten: '#9c3f37' },
+      gruen: { grund: '#6f9a6b', schatten: '#4f7650' },
+      blau:  { grund: '#5b7fa8', schatten: '#41608a' },
+    },
+    gold: '#e7c46a',
+    creme: '#f7eedd',
+    ton: '#c97b4f', tonKante: '#a9603a', tonSchatten: '#9e5634',
+    blatt: ['#6fa36a', '#5c9460', '#82b071'],
+    blattDunkel: '#4c7d4f',
+    kaktus: '#7fae86', kaktusDunkel: '#5f8d68', kaktusHell: '#a5cba9',
+    keramik: '#efe3cf', keramikKante: '#d9c7aa', keramikBand: '#5b7fa8',
+    porzellan: '#f7f1e6', porzellanSchatten: '#ddd0bc',
+    muster: ['#c8574d', '#5b7fa8', '#6f9a6b', '#d49a3a'],
+    tasse: ['#e3a49b', '#9cc3c9', '#e9c77a', '#b9a6d6'],
+    tee: '#a8693b',
+  };
+
+  const boden = '<ellipse cx="50" cy="117" rx="30" ry="2.6" fill="#4a3b30" opacity=".14"/>';
+  const svg = (inhalt, label) =>
+    `<svg viewBox="0 0 100 120" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${label}">${boden}${inhalt}</svg>`;
+
+  /* ---------- Buch ---------- */
+  function buch(seed, farbe) {
+    const r = rng(seed);
+    const p = PALETTE.buch[farbe];
+    const d = zw(r, -0.05, 0.05);
+    const grund = nuance(p.grund, d), schatten = nuance(p.schatten, d);
+    const w = zw(r, 40, 54), h = zw(r, 84, 106);
+    const x = 50 - w / 2, y = 116 - h;
+    const kant = w * 0.2;
+    let baender = '';
+    // Jede Farbe hat ein eigenes Bandmuster (hilft bei Farbschwäche)
+    if (farbe === 'rot') {
+      for (const yy of [y + h * 0.12, y + h * 0.82]) {
+        baender += `<rect x="${x}" y="${yy}" width="${w}" height="3.2" fill="${PALETTE.gold}"/>`;
+        baender += `<rect x="${x}" y="${yy + 5}" width="${w}" height="1.4" fill="${PALETTE.gold}" opacity=".8"/>`;
+      }
+    } else if (farbe === 'gruen') {
+      const yy = y + h * zw(r, 0.38, 0.48);
+      baender += `<rect x="${x}" y="${yy}" width="${w}" height="${h * 0.16}" fill="${schatten}"/>`;
+      baender += `<circle cx="50" cy="${yy + h * 0.08}" r="3.4" fill="${PALETTE.gold}"/>`;
+      baender += `<rect x="${x}" y="${y + h * 0.9}" width="${w}" height="2" fill="${PALETTE.gold}" opacity=".85"/>`;
+    } else {
+      for (let i = 0; i < 3; i++) {
+        baender += `<rect x="${x}" y="${y + h * 0.1 + i * 5}" width="${w}" height="2" fill="${PALETTE.gold}"/>`;
+      }
+      baender += `<path d="M${50 - 5} ${y + h * 0.78} l5 -6 l5 6 l-5 6z" fill="${PALETTE.gold}"/>`;
+    }
+    // Titelschild
+    const schild = r() < 0.7
+      ? `<rect x="${x + w * 0.2}" y="${y + h * zw(r, 0.24, 0.3)}" width="${w * 0.6}" height="${h * 0.09}" rx="1.5" fill="${PALETTE.creme}" opacity=".92"/>
+         <rect x="${x + w * 0.28}" y="${y + h * 0.27 + 1}" width="${w * 0.44}" height="1.3" fill="${schatten}" opacity=".5"/>`
+      : '';
+    const clip = id('b');
+    return svg(`
+      <defs><clipPath id="${clip}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4"/></clipPath></defs>
+      <g clip-path="url(#${clip})">
+        <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${grund}"/>
+        ${baender}${schild}
+        <rect x="${x + w - kant}" y="${y}" width="${kant}" height="${h}" fill="${schatten}" opacity=".55"/>
+        <rect x="${x + 3}" y="${y}" width="3.2" height="${h}" fill="#fff" opacity=".22"/>
+      </g>`, `Buch ${farbe}`);
+  }
+
+  /* ---------- Topf (gemeinsam für Pflanzen) ---------- */
+  function topf(oben, unten, hoehe, farbe, kante, schatten, extra = '') {
+    const y0 = 116 - hoehe;
+    const clip = id('t');
+    return {
+      y0,
+      svg: `
+      <defs><clipPath id="${clip}"><path d="M${50 - oben / 2} ${y0} L${50 + oben / 2} ${y0} L${50 + unten / 2} 116 L${50 - unten / 2} 116 Z"/></clipPath></defs>
+      <g clip-path="url(#${clip})">
+        <rect x="0" y="${y0}" width="100" height="${hoehe}" fill="${farbe}"/>
+        ${extra}
+        <rect x="${50 + oben * 0.18}" y="${y0}" width="${oben}" height="${hoehe}" fill="${schatten}" opacity=".45"/>
+      </g>
+      <rect x="${50 - oben / 2 - 3}" y="${y0 - 3}" width="${oben + 6}" height="8" rx="2" fill="${kante}"/>
+      <rect x="${50 - oben / 2 - 3}" y="${y0 - 3}" width="${oben + 6}" height="2.4" rx="1.2" fill="#fff" opacity=".2"/>`,
+    };
+  }
+
+  /* ---------- Topfpflanze ---------- */
+  function pflanze(seed) {
+    const r = rng(seed);
+    const t = topf(54, 40, zw(r, 30, 36), PALETTE.ton, PALETTE.tonKante, PALETTE.tonSchatten);
+    const basisY = t.y0 - 1;
+    const n = Math.round(zw(r, 5, 8));
+    const gruen = wahl(r, PALETTE.blatt);
+    const blaetter = [];
+    for (let i = 0; i < n; i++) {
+      const winkel = -62 + (124 * i) / (n - 1) + zw(r, -8, 8);
+      const laenge = zw(r, 38, 58) * (1 - Math.abs(winkel) / 260);
+      const breite = zw(r, 9, 13);
+      blaetter.push({ winkel, laenge, breite, hinten: Math.abs(winkel) > 30 });
+    }
+    // Hintere (äußere) Blätter zuerst und dunkler
+    blaetter.sort((a, b) => Math.abs(b.winkel) - Math.abs(a.winkel));
+    const blattSvg = blaetter.map((b) => {
+      const l = b.laenge, w = b.breite;
+      const f = b.hinten ? nuance(gruen, -0.07) : gruen;
+      return `<g transform="translate(50 ${basisY}) rotate(${b.winkel.toFixed(1)})">
+        <path d="M0 0 C${w} ${-l * 0.3} ${w * 0.9} ${-l * 0.8} 0 ${-l} C${-w * 0.9} ${-l * 0.8} ${-w} ${-l * 0.3} 0 0Z" fill="${f}"/>
+        <path d="M0 0 C${-w * 0.9} ${-l * 0.3} ${-w * 0.8} ${-l * 0.8} 0 ${-l} L0 0Z" fill="#fff" opacity=".12"/>
+        <path d="M0 -2 L0 ${-l * 0.85}" stroke="${PALETTE.blattDunkel}" stroke-width="1.2" opacity=".45" stroke-linecap="round"/>
+      </g>`;
+    }).join('');
+    return svg(blattSvg + t.svg, 'Topfpflanze');
+  }
+
+  /* ---------- Kaktus ---------- */
+  function kaktus(seed) {
+    const r = rng(seed);
+    const band = `<rect x="0" y="${116 - 16}" width="100" height="4" fill="${PALETTE.keramikBand}" opacity=".85"/>`;
+    const t = topf(46, 36, 28, PALETTE.keramik, PALETTE.keramikKante, PALETTE.porzellanSchatten, band);
+    const bw = zw(r, 26, 32), bh = zw(r, 52, 70);
+    const bx = 50 - bw / 2, by = t.y0 + 2 - bh;
+    const armeAnzahl = Math.round(zw(r, 0, 2));
+    let arme = '';
+    const seiten = armeAnzahl === 2 ? [-1, 1] : armeAnzahl === 1 ? [wahl(r, [-1, 1])] : [];
+    for (const s of seiten) {
+      const ay = by + bh * zw(r, 0.35, 0.55);
+      const ah = zw(r, 18, 26), aw = 11;
+      const ax = s < 0 ? bx - aw - 2 : bx + bw + 2;
+      arme += `<rect x="${s < 0 ? ax + aw / 2 : bx + bw - 2}" y="${ay}" width="${aw / 2 + 4}" height="${aw}" rx="${aw / 2}" fill="${PALETTE.kaktus}"/>
+               <rect x="${ax}" y="${ay - ah + aw}" width="${aw}" height="${ah}" rx="${aw / 2}" fill="${PALETTE.kaktus}"/>
+               <rect x="${ax + aw * 0.62}" y="${ay - ah + aw + 2}" width="${aw * 0.3}" height="${ah - 4}" rx="2" fill="${PALETTE.kaktusDunkel}" opacity=".5"/>`;
+    }
+    // Rippen und Stacheln
+    let rippen = '';
+    for (const fx of [0.33, 0.66]) {
+      rippen += `<path d="M${bx + bw * fx} ${by + 6} L${bx + bw * fx} ${by + bh - 2}" stroke="${PALETTE.kaktusDunkel}" stroke-width="1.3" opacity=".45"/>`;
+    }
+    let stacheln = '';
+    for (let i = 0; i < 14; i++) {
+      const sx = bx + zw(r, 4, bw - 4), sy = by + zw(r, 6, bh - 6);
+      stacheln += `<path d="M${sx - 1.6} ${sy - 1.6} l3.2 3.2 M${sx + 1.6} ${sy - 1.6} l-3.2 3.2" stroke="${PALETTE.creme}" stroke-width=".9" opacity=".9"/>`;
+    }
+    const bluete = r() < 0.5
+      ? [0, 72, 144, 216, 288].map((a) => {
+          const rad = (a * Math.PI) / 180;
+          return `<circle cx="${50 + Math.cos(rad) * 3.6}" cy="${by + 1 + Math.sin(rad) * 3.6}" r="3.4" fill="#e8909a"/>`;
+        }).join('') + `<circle cx="50" cy="${by + 1}" r="2.2" fill="${PALETTE.gold}"/>`
+      : '';
+    return svg(`
+      ${arme}
+      <rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="${bw / 2}" fill="${PALETTE.kaktus}"/>
+      <rect x="${bx + bw * 0.62}" y="${by + 4}" width="${bw * 0.38}" height="${bh - 6}" rx="${bw * 0.19}" fill="${PALETTE.kaktusDunkel}" opacity=".45"/>
+      <rect x="${bx + 4}" y="${by + 8}" width="3" height="${bh * 0.55}" rx="1.5" fill="${PALETTE.kaktusHell}" opacity=".7"/>
+      ${rippen}${stacheln}${bluete}
+      ${t.svg}`, 'Kaktus');
+  }
+
+  /* ---------- Teekanne ---------- */
+  function teekanne(seed) {
+    const r = rng(seed);
+    const farbe = wahl(r, PALETTE.muster);
+    const art = wahl(r, ['punkte', 'streifen', 'bluemchen']);
+    const rx = zw(r, 28, 31), ry = zw(r, 24, 27);
+    const cy = 112 - ry;
+    const clip = id('k');
+    let muster = '';
+    if (art === 'punkte') {
+      for (let yy = cy - ry; yy < cy + ry; yy += 9) {
+        for (let xx = 50 - rx + ((yy / 9) % 2 ? 4.5 : 0); xx < 50 + rx; xx += 9) {
+          muster += `<circle cx="${xx}" cy="${yy}" r="2" fill="${farbe}"/>`;
+        }
+      }
+    } else if (art === 'streifen') {
+      for (let yy = cy - ry + 8; yy < cy + ry; yy += 9) {
+        muster += `<rect x="0" y="${yy}" width="100" height="3" fill="${farbe}" opacity=".85"/>`;
+      }
+    } else {
+      const orte = [[-14, -6], [8, -12], [16, 6], [-4, 10], [-18, 12]];
+      for (const [dx, dy] of orte) {
+        const x = 50 + dx, y = cy + dy;
+        for (let a = 0; a < 5; a++) {
+          const rad = (a * 72 * Math.PI) / 180;
+          muster += `<circle cx="${x + Math.cos(rad) * 2.6}" cy="${y + Math.sin(rad) * 2.6}" r="2.2" fill="${farbe}"/>`;
+        }
+        muster += `<circle cx="${x}" cy="${y}" r="1.4" fill="${PALETTE.gold}"/>`;
+      }
+    }
+    const tuelle = `<path d="M${50 + rx - 6} ${cy + 4} C${50 + rx + 8} ${cy + 2} ${50 + rx + 10} ${cy - 14} ${50 + rx + 16} ${cy - 24}
+                    L${50 + rx + 20} ${cy - 22} C${50 + rx + 16} ${cy - 10} ${50 + rx + 14} ${cy + 14} ${50 + rx - 6} ${cy + 14}Z"
+                    fill="${PALETTE.porzellan}" stroke="${PALETTE.porzellanSchatten}" stroke-width="1"/>`;
+    const henkel = `<path d="M${50 - rx + 4} ${cy - ry * 0.55} C${50 - rx - 16} ${cy - ry * 0.6} ${50 - rx - 16} ${cy + ry * 0.55} ${50 - rx + 4} ${cy + ry * 0.4}"
+                    fill="none" stroke="${PALETTE.porzellanSchatten}" stroke-width="7.5" stroke-linecap="round"/>
+                    <path d="M${50 - rx + 4} ${cy - ry * 0.55} C${50 - rx - 16} ${cy - ry * 0.6} ${50 - rx - 16} ${cy + ry * 0.55} ${50 - rx + 4} ${cy + ry * 0.4}"
+                    fill="none" stroke="${PALETTE.porzellan}" stroke-width="4.5" stroke-linecap="round"/>`;
+    const deckelY = cy - ry + 3;
+    return svg(`
+      <defs><clipPath id="${clip}"><ellipse cx="50" cy="${cy}" rx="${rx}" ry="${ry}"/></clipPath></defs>
+      ${henkel}${tuelle}
+      <rect x="${50 - rx * 0.55}" y="${cy + ry - 6}" width="${rx * 1.1}" height="9" rx="3" fill="${PALETTE.porzellanSchatten}"/>
+      <g clip-path="url(#${clip})">
+        <rect x="0" y="0" width="100" height="120" fill="${PALETTE.porzellan}"/>
+        ${muster}
+        <ellipse cx="${50 + rx * 0.55}" cy="${cy + 4}" rx="${rx * 0.75}" ry="${ry * 1.2}" fill="${PALETTE.porzellanSchatten}" opacity=".55"/>
+      </g>
+      <ellipse cx="${50 - rx * 0.42}" cy="${cy - ry * 0.35}" rx="6" ry="3.4" transform="rotate(-30 ${50 - rx * 0.42} ${cy - ry * 0.35})" fill="#fff" opacity=".75"/>
+      <path d="M${50 - 16} ${deckelY} Q50 ${deckelY - 14} ${50 + 16} ${deckelY}Z" fill="${PALETTE.porzellan}" stroke="${PALETTE.porzellanSchatten}" stroke-width="1"/>
+      <rect x="${50 - 18}" y="${deckelY - 1}" width="36" height="4" rx="2" fill="${farbe}"/>
+      <circle cx="50" cy="${deckelY - 11}" r="4.2" fill="${farbe}"/>
+      <circle cx="48.6" cy="${deckelY - 12.4}" r="1.3" fill="#fff" opacity=".6"/>`, 'Teekanne');
+  }
+
+  /* ---------- Teetasse ---------- */
+  function teetasse(seed) {
+    const r = rng(seed);
+    const farbe = wahl(r, PALETTE.tasse);
+    const schatten = nuance(farbe, -0.12);
+    const oben = 80, w = zw(r, 50, 56);
+    const clip = id('c');
+    const koerper = `M${50 - w / 2} ${oben} L${50 + w / 2} ${oben} Q${50 + w / 2 - 2} 110 50 110 Q${50 - w / 2 + 2} 110 ${50 - w / 2} ${oben}Z`;
+    return svg(`
+      <ellipse cx="50" cy="112" rx="42" ry="6.5" fill="${PALETTE.porzellanSchatten}"/>
+      <ellipse cx="50" cy="111" rx="42" ry="5.5" fill="${PALETTE.porzellan}"/>
+      <ellipse cx="50" cy="111" rx="24" ry="3" fill="${PALETTE.porzellanSchatten}" opacity=".7"/>
+      <path d="M${50 + w / 2 - 3} ${oben + 6} C${50 + w / 2 + 14} ${oben + 4} ${50 + w / 2 + 12} ${oben + 26} ${50 + w / 2 - 6} ${oben + 22}"
+            fill="none" stroke="${schatten}" stroke-width="6" stroke-linecap="round"/>
+      <defs><clipPath id="${clip}"><path d="${koerper}"/></clipPath></defs>
+      <g clip-path="url(#${clip})">
+        <rect x="0" y="${oben}" width="100" height="40" fill="${farbe}"/>
+        <rect x="0" y="${oben + 6}" width="100" height="3" fill="#fff" opacity=".55"/>
+        <rect x="${50 + w * 0.12}" y="${oben}" width="${w}" height="40" fill="${schatten}" opacity=".5"/>
+      </g>
+      <ellipse cx="50" cy="${oben}" rx="${w / 2}" ry="5" fill="${PALETTE.porzellan}"/>
+      <ellipse cx="50" cy="${oben + 1}" rx="${w / 2 - 4}" ry="3.4" fill="${PALETTE.tee}"/>
+      <ellipse cx="${50 - w * 0.28}" cy="${oben + 10}" rx="2.6" ry="5" fill="#fff" opacity=".45"/>`, 'Teetasse');
+  }
+
+  const ARTEN = {
+    buchRot:   { name: 'Buch rot',    zeichne: (s) => buch(s, 'rot') },
+    buchGruen: { name: 'Buch grün',   zeichne: (s) => buch(s, 'gruen') },
+    buchBlau:  { name: 'Buch blau',   zeichne: (s) => buch(s, 'blau') },
+    pflanze:   { name: 'Topfpflanze', zeichne: pflanze },
+    kaktus:    { name: 'Kaktus',      zeichne: kaktus },
+    teekanne:  { name: 'Teekanne',    zeichne: teekanne },
+    teetasse:  { name: 'Teetasse',    zeichne: teetasse },
+  };
+
+  return { ARTEN, rng };
+})();
+/* ===================== Ende GRAFIK-GENERATOREN ===================== */
+
+/* ---------- Musterblatt-Seite ---------- */
+const sektionen = document.getElementById('sektionen');
+const seedAnzeige = document.getElementById('seedAnzeige');
+
+function zeichneAlles(basis) {
+  seedAnzeige.textContent = `Startwert ${basis}`;
+  const r = Grafik.rng(basis);
+  const neuerSeed = () => Math.floor(r() * 1e9);
+
+  // Varianten je Art
+  sektionen.innerHTML = '';
+  for (const [schluessel, art] of Object.entries(Grafik.ARTEN)) {
+    const h = document.createElement('h2');
+    h.textContent = art.name;
+    const raster = document.createElement('div');
+    raster.className = 'raster';
+    for (let i = 0; i < 6; i++) {
+      const k = document.createElement('div');
+      k.className = 'kachel';
+      k.innerHTML = art.zeichne(neuerSeed());
+      raster.appendChild(k);
+    }
+    sektionen.append(h, raster);
+  }
+
+  // Regale: gemischte Belegung wie im Spiel
+  const schluessel = Object.keys(Grafik.ARTEN);
+  const belegung = [];
+  for (let b = 0; b < 8; b++) {
+    const anzahl = b >= 6 ? (b === 6 ? 2 : 0) : 4;
+    const reihe = [];
+    for (let i = 0; i < anzahl; i++) reihe.push([schluessel[Math.floor(r() * schluessel.length)], neuerSeed()]);
+    belegung.push(reihe);
+  }
+  baueRegal(document.getElementById('regalKlein'), belegung);
+  baueRegal(document.getElementById('regalGross'), belegung.slice(0, 5));
+}
+
+function baueRegal(ziel, belegung) {
+  ziel.innerHTML = '';
+  for (const reihe of belegung) {
+    const brett = document.createElement('div');
+    brett.className = 'brett';
+    const plaetze = document.createElement('div');
+    plaetze.className = 'plaetze';
+    for (let i = 0; i < 4; i++) {
+      const platz = document.createElement('div');
+      if (reihe[i]) platz.innerHTML = Grafik.ARTEN[reihe[i][0]].zeichne(reihe[i][1]);
+      plaetze.appendChild(platz);
+    }
+    const holz = document.createElement('div');
+    holz.className = 'holz';
+    brett.append(plaetze, holz);
+    ziel.appendChild(brett);
+  }
+}
+
+document.getElementById('wuerfeln').addEventListener('click', () => {
+  zeichneAlles(Math.floor(Math.random() * 100000));
+});
+zeichneAlles(2110);
+</script>
+</body>
+</html>

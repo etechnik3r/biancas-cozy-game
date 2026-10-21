@@ -5,4 +5,5 @@ Alle wesentlichen Änderungen an „Biancas Leseecke“. Neueste Einträge oben.
 ## Unveröffentlicht
 
 ### Hinzugefügt
+- 2026-10-21: Grafik-Musterblatt (`musterblatt.html`) mit parametrischen SVG-Generatoren für Buch (rot, grün, blau), Topfpflanze, Kaktus, Teekanne und Teetasse, je 6 Varianten und Regal-Vorschau in Spielgröße (8 und 5 Bretter).
 - 2026-10-21: Repository angelegt mit README, CHANGELOG, Arbeitsanweisungen (`CLAUDE.md`), Konzept v1 (`docs/konzept.md`) und offenen Punkten (`docs/offene-punkte.md`).
