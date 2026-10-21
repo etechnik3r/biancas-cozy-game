@@ -10,9 +10,17 @@
     --papier: #f6efe4;
     --tinte: #4a3b30;
     --tinte-hell: #8a7766;
-    --holz-oben: #cfa175;
-    --holz: #a8734a;
     --holz-dunkel: #85552f;
+    /* Regaloptik (wird per Einstellung überschrieben) */
+    --h-linie: #cfa175;
+    --h-oben: #cfa175;
+    --h-mitte: #a8734a;
+    --h-unten: #85552f;
+    --h-kante: #6b4024;
+    --maser: 1;
+    /* Thema */
+    --text: #4a3b30;
+    --text-hell: #8a7766;
     --gold: #d4ae57;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -20,10 +28,8 @@
   body {
     color: var(--tinte);
     font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
-    background:
-      radial-gradient(120% 70% at 50% 0%, rgba(255,250,240,.6), rgba(255,250,240,0) 70%),
-      repeating-linear-gradient(90deg, #ecdcc2 0 18px, #e8d6ba 18px 19px, #ecdcc2 19px 36px, #efe1c9 36px 37px);
-    background-color: #ecdcc2;
+    background: var(--wand, #ecdcc2);
+    background-color: var(--wand-farbe, #ecdcc2);
     overscroll-behavior: none;
     user-select: none;
     -webkit-user-select: none;
@@ -40,9 +46,23 @@
   }
 
   /* Kopfzeile */
-  header { display: flex; align-items: baseline; justify-content: space-between; padding: 4px 2px 8px; }
-  h1 { font-size: 1.3rem; font-weight: normal; margin: 0; letter-spacing: .01em; }
-  .level { color: var(--tinte-hell); font-size: .95rem; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 0 6px 2px; }
+  h1 { font-size: 1.3rem; font-weight: normal; margin: 0; letter-spacing: .01em; color: var(--text); }
+  h1 em { color: #a5523f; }
+  body.dunkel h1 em { color: #e8b8a0; }
+  .kopf-rechts { display: flex; align-items: center; gap: 8px; }
+  .level { color: var(--text-hell); font-size: .95rem; white-space: nowrap; }
+  button.zahnrad {
+    width: 44px; height: 44px; min-height: 44px; padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255,250,240,.6); color: var(--text);
+    box-shadow: inset 0 0 0 1px rgba(74,59,48,.12);
+  }
+  button.zahnrad svg { width: 22px; height: 22px; transition: transform .5s ease; }
+  button.zahnrad:active { transform: none; box-shadow: inset 0 0 0 1px rgba(74,59,48,.12); }
+  button.zahnrad:active svg { transform: rotate(60deg); }
+  body.dunkel button.zahnrad, body.dunkel .leiste button.leise { background: rgba(255,250,240,.12); color: var(--text); box-shadow: inset 0 0 0 1px rgba(255,250,240,.15); }
 
   /* Regal */
   .regal {
@@ -82,14 +102,40 @@
     position: absolute; left: 0; right: 0; bottom: 0; height: 13px;
     border-radius: 3px;
     background:
-      linear-gradient(var(--holz-oben) 0 3px, transparent 3px),
-      repeating-linear-gradient(90deg, rgba(255,255,255,0) 0 23px, rgba(255,255,255,.07) 23px 26px, rgba(0,0,0,0) 26px 61px, rgba(60,30,10,.08) 61px 63px),
-      linear-gradient(var(--holz), var(--holz-dunkel));
-    box-shadow: 0 1px 0 #6b4024, 0 7px 8px -5px rgba(60,35,15,.45);
+      linear-gradient(var(--h-linie) 0 3px, transparent 3px),
+      linear-gradient(var(--h-mitte), var(--h-unten));
+    box-shadow: 0 1px 0 var(--h-kante), 0 7px 8px -5px rgba(40,25,10,.45);
     transition: box-shadow .3s;
   }
-  .brett.aktiv .holz { box-shadow: 0 1px 0 #6b4024, 0 7px 8px -5px rgba(60,35,15,.45), 0 0 0 2px rgba(255,248,230,.9), 0 0 14px 2px rgba(212,174,87,.55); }
-  .brett.fertig .holz { box-shadow: 0 1px 0 #6b4024, 0 7px 8px -5px rgba(60,35,15,.45), 0 0 10px 1px rgba(212,174,87,.5); }
+  .holz::after {
+    content: ""; position: absolute; inset: 3px 0 0; border-radius: 0 0 3px 3px;
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,0) 0 23px, rgba(255,255,255,.08) 23px 26px, rgba(0,0,0,0) 26px 61px, rgba(60,30,10,.1) 61px 63px);
+    opacity: var(--maser);
+  }
+  .brett.aktiv .holz { box-shadow: 0 1px 0 var(--h-kante), 0 7px 8px -5px rgba(40,25,10,.45), 0 0 0 2px rgba(255,248,230,.9), 0 0 14px 2px rgba(212,174,87,.6); }
+  .brett.fertig .holz { box-shadow: 0 1px 0 var(--h-kante), 0 7px 8px -5px rgba(40,25,10,.45), 0 0 10px 1px rgba(212,174,87,.55); }
+
+  /* 3D-Regal: Oberseite der Bretter, Rückwand, Seitenwangen, Schattenwurf */
+  .regal.dreid { position: relative; padding: 0 13px; }
+  .regal.dreid::before, .regal.dreid::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 11px; border-radius: 3px;
+    background: linear-gradient(90deg, var(--h-oben), var(--h-mitte) 55%, var(--h-unten));
+    box-shadow: 0 0 0 1px var(--h-kante), 0 6px 10px -4px rgba(40,25,10,.4);
+  }
+  .regal.dreid::before { left: 0; }
+  .regal.dreid::after { right: 0; transform: scaleX(-1); }
+  .dreid .brett::before {
+    content: ""; position: absolute; left: -2px; right: -2px; top: -8px; bottom: 12px;
+    background: linear-gradient(rgba(40,25,10,.17), rgba(40,25,10,.05) 45%, rgba(40,25,10,.12));
+    border-radius: 2px;
+  }
+  .dreid .holz::before {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 8px;
+    background: linear-gradient(var(--h-unten), var(--h-oben));
+    clip-path: polygon(1.8% 0, 98.2% 0, 100% 100%, 0 100%);
+  }
+  .dreid .plaetze { bottom: 15px; }
+  .dreid .ding svg { filter: drop-shadow(4px -2px 3px rgba(40,25,10,.2)); }
 
   /* Effekte beim fertigen Brett */
   .effekt { position: absolute; inset: 0 8px 11px; pointer-events: none; display: grid; grid-template-columns: repeat(4, 1fr); }
@@ -228,6 +274,71 @@
   .haken input:checked + .kasten { background: #85552f; border-color: #85552f; }
   .haken input:checked + .kasten::after { transform: rotate(45deg) scale(1); }
   .haken input:focus-visible + .kasten { outline: 2px solid var(--gold); outline-offset: 2px; }
+  /* Einstellungen (Blatt von unten) */
+  .schleier.blatt-schleier { align-items: flex-end; padding: 0; }
+  .blatt {
+    background: #fffaf2;
+    width: 100%; max-width: 480px;
+    max-height: 88vh; max-height: 88dvh;
+    overflow: hidden auto;
+    border-radius: 22px 22px 0 0;
+    padding: 6px 18px max(20px, env(safe-area-inset-bottom));
+    transform: translateY(100%);
+    transition: transform .4s cubic-bezier(.2,.9,.3,1);
+    box-shadow: 0 -12px 30px -10px rgba(40,25,10,.4);
+  }
+  .schleier.offen .blatt { transform: none; }
+  .griff { width: 42px; height: 4px; border-radius: 2px; background: #dccbb0; margin: 4px auto 8px; }
+  .blatt-kopf { display: flex; align-items: center; justify-content: space-between; }
+  .blatt h2 { font-weight: normal; font-size: 1.4rem; margin: 0; }
+  .blatt h3 { font-weight: normal; font-size: 1.02rem; margin: 20px 0 2px; }
+  .blatt .hinweis { font-size: .82rem; color: var(--tinte-hell); margin: 0 0 10px; }
+  button.schliessen { width: 44px; height: 44px; min-height: 44px; padding: 0; justify-content: center; border-radius: 50%; background: #f1e6d4; color: var(--tinte); box-shadow: none; }
+  .raster3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 10px; }
+  button.wahl {
+    display: flex; flex-direction: column; align-items: stretch; gap: 5px;
+    padding: 0; min-height: 0; border-radius: 14px;
+    background: none; color: var(--tinte); box-shadow: none;
+    text-align: center; font-size: .84rem; line-height: 1.2;
+  }
+  button.wahl:active { transform: scale(.97); box-shadow: none; }
+  button.wahl:disabled { opacity: 1; cursor: default; }
+  .wahl .vorschau {
+    position: relative; display: block; aspect-ratio: 1 / 1; border-radius: 12px; overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(74,59,48,.14);
+    transition: box-shadow .2s;
+  }
+  .wahl.aktiv .vorschau { box-shadow: 0 0 0 2.5px #fffaf2, 0 0 0 4.5px var(--gold); }
+  .wahl:disabled .vorschau > :not(.schloss) { filter: grayscale(.9); opacity: .45; }
+  .wahl .ab { font-size: .72rem; color: var(--tinte-hell); margin-top: -3px; }
+  .wahl .schloss { position: absolute; inset: 0; display: grid; place-items: center; color: #6d5a49; }
+  .wahl .schloss svg { width: 22px; height: 22px; }
+  .vorschau .wandbild { position: absolute; inset: 0; }
+  .vorschau .mini-holz { position: absolute; left: 10%; right: 10%; bottom: 16%; height: 8%; border-radius: 2px;
+    background: linear-gradient(var(--h-linie) 0 25%, var(--h-mitte) 25%, var(--h-unten)); box-shadow: 0 1px 0 var(--h-kante), 0 4px 5px -3px rgba(40,25,10,.4); }
+  .vorschau .mini-dinge { position: absolute; left: 14%; right: 14%; bottom: 24%; height: 52%; display: flex; align-items: flex-end; justify-content: center; gap: 2%; }
+  .vorschau .mini-dinge svg { height: 100%; width: auto; flex: 0 1 auto; min-width: 0; }
+  .zeile { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 54px; border-bottom: 1px solid #efe4d2; }
+  .zeile .beschr { font-size: .95rem; }
+  .zeile .beschr small { display: block; color: var(--tinte-hell); font-size: .78rem; }
+  .schalter { position: relative; flex: 0 0 auto; width: 50px; height: 30px; cursor: pointer; }
+  .schalter input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+  .schalter .spur { position: absolute; inset: 0; border-radius: 15px; background: #dccdb6; transition: background .25s; pointer-events: none; }
+  .schalter .spur::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(40,25,10,.3); transition: transform .25s cubic-bezier(.3,1.4,.5,1); }
+  .schalter input:checked + .spur { background: #85552f; }
+  .schalter input:checked + .spur::after { transform: translateX(20px); }
+  .schalter input:focus-visible + .spur { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .knopfreihe { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  .knopfreihe button { flex: 1 1 140px; justify-content: center; }
+  button.warnung { background: #a5523f; box-shadow: 0 2px 0 #7a3a2c; }
+  .blatt .fuss { text-align: center; color: var(--tinte-hell); font-size: .75rem; margin: 16px 0 0; }
+
+  /* Freigeschaltet-Hinweis in der Gewinnkarte */
+  .neu-frei { margin: -6px 0 18px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .neu-frei .chip { display: inline-flex; align-items: center; gap: 10px; padding: 6px 14px 6px 6px; border-radius: 999px; background: #f6ecdb; font-size: .9rem; }
+  .neu-frei .chip .punkt { width: 30px; height: 30px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(74,59,48,.15); background-size: cover; }
+  .neu-frei .chip b { font-weight: normal; color: #a5523f; }
+
   @media (max-height: 640px) {
     .vignette { height: 100px; padding-bottom: 12px; }
     .vignette .stueck { height: 70px; }
@@ -243,8 +354,13 @@
 <body>
 <div class="app">
   <header>
-    <h1>Biancas Leseecke</h1>
-    <span class="level" id="levelAnzeige"></span>
+    <h1><em>Biancas</em> Leseecke</h1>
+    <div class="kopf-rechts">
+      <span class="level" id="levelAnzeige"></span>
+      <button type="button" class="zahnrad" id="knopfEinstellungen" aria-label="Einstellungen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 2.6h3.4l.5 2.6 1.6.9 2.5-.9 1.7 2.9-2 1.8v1.9l2 1.8-1.7 2.9-2.5-.9-1.6.9-.5 2.6h-3.4l-.5-2.6-1.6-.9-2.5.9-1.7-2.9 2-1.8v-1.9l-2-1.8 1.7-2.9 2.5.9 1.6-.9z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
   </header>
   <main class="regal" id="regal" aria-label="Regal"></main>
   <div class="leiste">
@@ -264,6 +380,7 @@
     <div id="gewinnZier"></div>
     <h2 id="gewinnTitel">Schön sortiert, Bianca!</h2>
     <p id="gewinnText"></p>
+    <div class="neu-frei" id="gewinnNeu"></div>
     <button type="button" id="knopfWeiter">Nächstes Regal</button>
   </div>
 </div>
@@ -287,6 +404,38 @@
     <button type="button" id="knopfLos">Los geht’s</button><br>
     <label class="haken"><input type="checkbox" id="nichtMehr"><span class="kasten"></span>Beim Start nicht mehr zeigen</label>
   </div>
+</div>
+
+<div class="schleier blatt-schleier" id="einstellungen" role="dialog" aria-modal="true" aria-labelledby="einstellungenTitel">
+  <section class="blatt">
+    <div class="griff" aria-hidden="true"></div>
+    <div class="blatt-kopf">
+      <h2 id="einstellungenTitel">Einrichten</h2>
+      <button type="button" class="schliessen" id="knopfSchliessen" aria-label="Schließen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <h3>Thema</h3>
+    <p class="hinweis">Die Tapete wechselt mit jedem Regal innerhalb des Themas.</p>
+    <div class="raster3" id="themenRaster"></div>
+    <h3>Regal</h3>
+    <p class="hinweis">Holz und Lack für alle Bretter.</p>
+    <div class="raster3" id="regalRaster"></div>
+    <h3>Darstellung</h3>
+    <div class="zeile">
+      <span class="beschr">Räumliche Regale<small>Bretter mit Tiefe, Rückwand und Seitenwangen</small></span>
+      <label class="schalter"><input type="checkbox" id="schalter3d" aria-label="Räumliche Regale"><span class="spur"></span></label>
+    </div>
+    <div class="zeile">
+      <span class="beschr">Begrüßung beim Start</span>
+      <label class="schalter"><input type="checkbox" id="schalterBegruessung" aria-label="Begrüßung beim Start"><span class="spur"></span></label>
+    </div>
+    <div class="knopfreihe">
+      <button type="button" class="leise" id="knopfAnleitung">Anleitung ansehen</button>
+      <button type="button" class="leise" id="knopfReset">Spielstand löschen</button>
+    </div>
+    <p class="fuss" id="fussText"></p>
+  </section>
 </div>
 
 <script>
@@ -1080,6 +1229,76 @@ const Puzzle = (() => {
 })();
 
 /* =====================================================================
+   THEMEN, TAPETEN, REGALE
+   Tapeten sind parametrisch erzeugte SVG-Kacheln (als data-URL im CSS).
+   ab = nach welchem geschafften Regal freigeschaltet (0 = sofort).
+   ===================================================================== */
+const Einrichtung = (() => {
+  const url = (svg) => `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+  const kachel = (w, h, inhalt) => `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${inhalt}</svg>`;
+  const blume = (x, y, r, farbe, mitte) => {
+    let b = '';
+    for (let i = 0; i < 5; i++) {
+      const a = (i * 72 - 90) * Math.PI / 180;
+      b += `<circle cx="${(x + Math.cos(a) * r).toFixed(1)}" cy="${(y + Math.sin(a) * r).toFixed(1)}" r="${(r * .85).toFixed(1)}" fill="${farbe}"/>`;
+    }
+    return b + `<circle cx="${x}" cy="${y}" r="${(r * .55).toFixed(1)}" fill="${mitte}"/>`;
+  };
+  const stern = (x, y, r, farbe) => `<path d="M${x} ${y - r} Q${x + r * .18} ${y - r * .18} ${x + r} ${y} Q${x + r * .18} ${y + r * .18} ${x} ${y + r} Q${x - r * .18} ${y + r * .18} ${x - r} ${y} Q${x - r * .18} ${y - r * .18} ${x} ${y - r}Z" fill="${farbe}"/>`;
+
+  const MUSTER = {
+    streifen: (g, a) => kachel(38, 10, `<rect width="38" height="10" fill="${g}"/><rect x="5" width="8" height="10" fill="${a}" opacity=".35"/><rect x="18" width="1.2" height="10" fill="${a}"/><rect x="36" width="1" height="10" fill="${a}" opacity=".7"/>`),
+    rauten: (g, a) => kachel(32, 32, `<rect width="32" height="32" fill="${g}"/><path d="M16 3 L23 16 L16 29 L9 16Z" fill="${a}" opacity=".5"/><path d="M16 10 L19 16 L16 22 L13 16Z" fill="${g}"/>${[[0, 0], [32, 0], [0, 32], [32, 32]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="${a}"/>`).join('')}`),
+    punkte: (g, a) => kachel(26, 26, `<rect width="26" height="26" fill="${g}"/><circle cx="6.5" cy="6.5" r="2" fill="${a}"/><circle cx="19.5" cy="19.5" r="2" fill="${a}"/>`),
+    blumen: (g, a, b) => kachel(48, 48, `<rect width="48" height="48" fill="${g}"/>${blume(12, 12, 2.6, b, a)}${blume(36, 36, 2.6, b, a)}<ellipse cx="36" cy="12" rx="3.4" ry="1.5" transform="rotate(35 36 12)" fill="${a}" opacity=".7"/><ellipse cx="12" cy="36" rx="3.4" ry="1.5" transform="rotate(-35 12 36)" fill="${a}" opacity=".7"/>`),
+    blaetter: (g, a, b) => {
+      let l = '';
+      for (const t of [.2, .4, .6, .8]) {
+        const x = 6 + 40 * t, y = 46 - 40 * t - Math.sin(t * Math.PI) * 4;
+        l += `<ellipse cx="${(x - 4).toFixed(1)}" cy="${(y - 3).toFixed(1)}" rx="5" ry="2.1" transform="rotate(-80 ${(x - 4).toFixed(1)} ${(y - 3).toFixed(1)})" fill="${b}" opacity=".55"/>`;
+        l += `<ellipse cx="${(x + 3.5).toFixed(1)}" cy="${(y + 3).toFixed(1)}" rx="5" ry="2.1" transform="rotate(-10 ${(x + 3.5).toFixed(1)} ${(y + 3).toFixed(1)})" fill="${b}" opacity=".55"/>`;
+      }
+      return kachel(52, 52, `<rect width="52" height="52" fill="${g}"/><path d="M4 48 Q28 40 48 6" fill="none" stroke="${a}" stroke-width="1.2"/>${l}`);
+    },
+    gitter: (g, a) => kachel(28, 28, `<rect width="28" height="28" fill="${g}"/><path d="M0 0 L28 28 M28 0 L0 28" stroke="${a}" stroke-width="1.6" opacity=".8"/><circle cx="14" cy="14" r="2" fill="${a}"/>`),
+    karo: (g, a) => kachel(24, 24, `<rect width="24" height="24" fill="${g}"/><rect width="12" height="24" fill="${a}" opacity=".3"/><rect width="24" height="12" fill="${a}" opacity=".3"/>`),
+    sterne: (g, a, b) => kachel(80, 80, `<rect width="80" height="80" fill="${g}"/>${stern(14, 18, 3.2, b)}${stern(58, 52, 2.4, b)}${stern(40, 8, 1.6, b)}${stern(66, 22, 1.3, b)}<circle cx="30" cy="44" r=".9" fill="${b}" opacity=".7"/><circle cx="12" cy="66" r="1.1" fill="${b}" opacity=".6"/><circle cx="48" cy="30" r=".7" fill="${b}" opacity=".6"/><circle cx="74" cy="72" r=".9" fill="${b}" opacity=".7"/><circle cx="34" cy="70" r="1.4" fill="${a}"/>`),
+    zickzack: (g, a) => kachel(24, 14, `<rect width="24" height="14" fill="${g}"/><path d="M0 4 L6 10 L12 4 L18 10 L24 4" fill="none" stroke="${a}" stroke-width="1.6"/>`),
+  };
+
+  const THEMEN = [
+    { id: 'bibliothek',   name: 'Bibliothek',    ab: 0,  farbe: '#ecdcc2', akzent: '#d9c19b', drei: '#c9ad82', muster: ['streifen', 'rauten', 'punkte'] },
+    { id: 'wintergarten', name: 'Wintergarten',  ab: 0,  farbe: '#e2e9d7', akzent: '#c2d1b2', drei: '#93ad83', muster: ['blaetter', 'gitter', 'streifen'] },
+    { id: 'teestube',     name: 'Teestube',      ab: 0,  farbe: '#f5e4dc', akzent: '#e6c1b4', drei: '#d0907f', muster: ['blumen', 'karo', 'punkte'] },
+    { id: 'abend',        name: 'Abendstunde',   ab: 6,  farbe: '#2e3a52', akzent: '#3e4c69', drei: '#ead8a2', muster: ['sterne', 'rauten', 'streifen'], dunkel: true },
+    { id: 'nordisch',     name: 'Nordisch hell', ab: 12, farbe: '#f0f0eb', akzent: '#dcddd3', drei: '#b8bcae', muster: ['zickzack', 'punkte', 'gitter'] },
+    { id: 'herbst',       name: 'Herbstlaube',   ab: 20, farbe: '#f0d9bc', akzent: '#ddb084', drei: '#c47b48', muster: ['blaetter', 'karo', 'rauten'] },
+  ];
+
+  const REGALE = [
+    { id: 'eiche',  name: 'Eiche',               ab: 0,  oben: '#cfa175', mitte: '#a8734a', unten: '#85552f', kante: '#6b4024' },
+    { id: 'ahorn',  name: 'Ahorn hell',          ab: 0,  oben: '#efd9b2', mitte: '#d8b887', unten: '#bf9866', kante: '#99744a' },
+    { id: 'nuss',   name: 'Nussbaum',            ab: 0,  oben: '#a97c55', mitte: '#7b5033', unten: '#5c3a23', kante: '#3e2414' },
+    { id: 'weiss',  name: 'Weiß lackiert',       ab: 3,  oben: '#ffffff', mitte: '#f1ece3', unten: '#d9d1c3', kante: '#b3a895', glatt: true },
+    { id: 'salbei', name: 'Salbei lackiert',     ab: 8,  oben: '#dbe6d2', mitte: '#adc2a2', unten: '#8fa785', kante: '#6c8463', glatt: true },
+    { id: 'antik',  name: 'Antik mit Goldkante', ab: 15, oben: '#9a6b46', mitte: '#6e4529', unten: '#50301b', kante: '#2f1a0d', linie: '#d9b562' },
+  ];
+
+  const STANDARD = { thema: 'bibliothek', regal: 'eiche', dreiD: true, begruessung: true };
+
+  const tapete = (thema, variante) => url(MUSTER[thema.muster[variante % thema.muster.length]](thema.farbe, thema.akzent, thema.drei));
+  const licht = (thema) => thema.dunkel
+    ? 'radial-gradient(80% 50% at 50% 0%, rgba(255,214,140,.30), rgba(255,214,140,0) 72%)'
+    : 'radial-gradient(120% 70% at 50% 0%, rgba(255,250,240,.6), rgba(255,250,240,0) 70%)';
+  const regalVars = (r) => ({
+    '--h-linie': r.linie || r.oben, '--h-oben': r.oben, '--h-mitte': r.mitte, '--h-unten': r.unten,
+    '--h-kante': r.kante, '--maser': r.glatt ? 0 : 1,
+  });
+
+  return { THEMEN, REGALE, STANDARD, tapete, licht, regalVars };
+})();
+
+/* =====================================================================
    OBERFLÄCHE
    ===================================================================== */
 const $ = (id) => document.getElementById(id);
@@ -1247,7 +1466,10 @@ function tippe(i) {
   }
   if (Puzzle.gewonnen(spiel.regal)) {
     spiel.sperre = true;
+    const vorher = speicher.geschafft;
     speicher.geschafft = Math.max(speicher.geschafft, spiel.level);
+    spiel.neuFrei = [...Einrichtung.THEMEN.map((t) => ['Tapete', t]), ...Einrichtung.REGALE.map((r) => ['Regal', r])]
+      .filter(([, x]) => x.ab > vorher && x.ab <= speicher.geschafft);
     speichere(true);
     setTimeout(zeigeGewinn, 1300);
   } else {
@@ -1305,6 +1527,16 @@ function feiereBrett(i) {
 
 /* ---------- Gewinn ---------- */
 function zeigeGewinn() {
+  const neu = spiel.neuFrei || [];
+  $('gewinnNeu').innerHTML = neu.length
+    ? '<span style="font-size:.85rem;color:var(--tinte-hell)">Neu zum Einrichten:</span>' + neu.map(([art, x]) => {
+        const bild = art === 'Tapete'
+          ? `background:${Einrichtung.tapete(x, 0)}`
+          : `background:linear-gradient(${x.linie || x.oben} 0 30%, ${x.mitte} 30%, ${x.unten})`;
+        return `<span class="chip"><span class="punkt" style='${bild}'></span>${art} <b>${x.name}</b></span>`;
+      }).join('')
+    : '';
+  spiel.neuFrei = [];
   $('gewinnText').textContent = `Regal ${spiel.level} ist fertig · ${spiel.verlauf.length} Züge`;
   $('gewinnZier').innerHTML = Grafik.ARTEN.teekanne.zeichne(spiel.level * 31 + 7).replace('<svg ', '<svg class="zier" ');
   $('schleier').classList.add('offen');
@@ -1320,6 +1552,7 @@ function setzeLevel(level, start, regal, verlauf) {
   spiel.sperre = false;
   dingEls.clear();
   baueBretter(regal.length);
+  wendeEinrichtungAn();
   zeichne();
 }
 
@@ -1352,6 +1585,103 @@ $('knopfWeiter').addEventListener('click', () => {
   starteLevel(spiel.level + 1);
 });
 
+/* ---------- Einrichtung anwenden ---------- */
+function einstellung() {
+  const e = { ...Einrichtung.STANDARD, ...speicher.einstellungen };
+  const frei = (liste, id, std) => {
+    const x = liste.find((y) => y.id === id);
+    return x && x.ab <= speicher.geschafft ? x : liste.find((y) => y.id === std);
+  };
+  e.themaObj = frei(Einrichtung.THEMEN, e.thema, Einrichtung.STANDARD.thema);
+  e.regalObj = frei(Einrichtung.REGALE, e.regal, Einrichtung.STANDARD.regal);
+  return e;
+}
+
+function wendeEinrichtungAn() {
+  const e = einstellung();
+  const root = document.documentElement.style;
+  const t = e.themaObj;
+  root.setProperty('--wand', `${Einrichtung.licht(t)}, ${Einrichtung.tapete(t, spiel.level - 1)}`);
+  root.setProperty('--wand-farbe', t.farbe);
+  for (const [k, v] of Object.entries(Einrichtung.regalVars(e.regalObj))) root.setProperty(k, v);
+  document.body.classList.toggle('dunkel', !!t.dunkel);
+  root.setProperty('--text', t.dunkel ? '#f3e9d6' : '#4a3b30');
+  root.setProperty('--text-hell', t.dunkel ? '#c8bca6' : '#8a7766');
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', t.farbe);
+  regalEl.classList.toggle('dreid', !!e.dreiD);
+}
+
+/* ---------- Einstellungsmenü ---------- */
+const SCHLOSS = '<span class="schloss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
+
+function wahlKnopf(gruppe, x, aktiv, vorschau) {
+  const frei = x.ab <= speicher.geschafft;
+  return `<button type="button" class="wahl${aktiv ? ' aktiv' : ''}" data-gruppe="${gruppe}" data-id="${x.id}" ${frei ? '' : 'disabled'} aria-pressed="${aktiv}">
+    <span class="vorschau">${vorschau}${frei ? '' : SCHLOSS}</span>
+    <span class="name">${x.name}</span>${frei ? '' : `<span class="ab">nach Regal ${x.ab}</span>`}</button>`;
+}
+
+function baueEinstellungen() {
+  const e = einstellung();
+  const holzStil = (r) => Object.entries(Einrichtung.regalVars(r)).map(([k, v]) => `${k}:${v}`).join(';');
+  const miniDinge = `<span class="mini-dinge">${Grafik.ARTEN.buchRot.zeichne(7)}${Grafik.ARTEN.teekanne.zeichne(64)}${Grafik.ARTEN.pflanze.zeichne(412)}</span>`;
+  $('themenRaster').innerHTML = Einrichtung.THEMEN.map((t) => wahlKnopf('thema', t, t.id === e.themaObj.id,
+    `<span class="wandbild" style='background:${Einrichtung.licht(t)}, ${Einrichtung.tapete(t, 0)}'></span><span class="mini-holz" style="${holzStil(e.regalObj)}"></span>`)).join('');
+  $('regalRaster').innerHTML = Einrichtung.REGALE.map((r) => wahlKnopf('regal', r, r.id === e.regalObj.id,
+    `<span class="wandbild" style='background:${Einrichtung.tapete(e.themaObj, 0)}'></span>${miniDinge}<span class="mini-holz" style="${holzStil(r)}"></span>`)).join('');
+  $('schalter3d').checked = !!e.dreiD;
+  $('schalterBegruessung').checked = e.begruessung !== false;
+  $('fussText').textContent = `${speicher.geschafft} ${speicher.geschafft === 1 ? 'Regal' : 'Regale'} sortiert`;
+}
+
+function oeffneEinstellungen() {
+  baueEinstellungen();
+  $('einstellungen').classList.add('offen');
+}
+function schliesseEinstellungen() {
+  $('einstellungen').classList.remove('offen');
+}
+
+function setzeEinstellung(schluessel, wert) {
+  speicher.einstellungen[schluessel] = wert;
+  wendeEinrichtungAn();
+  speichere();
+}
+
+$('knopfEinstellungen').addEventListener('click', oeffneEinstellungen);
+$('knopfSchliessen').addEventListener('click', schliesseEinstellungen);
+$('einstellungen').addEventListener('click', (ev) => { if (ev.target.id === 'einstellungen') schliesseEinstellungen(); });
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') schliesseEinstellungen(); });
+$('einstellungen').addEventListener('click', (ev) => {
+  const k = ev.target.closest('.wahl');
+  if (!k || k.disabled) return;
+  setzeEinstellung(k.dataset.gruppe, k.dataset.id);
+  baueEinstellungen();
+});
+$('schalter3d').addEventListener('change', (ev) => setzeEinstellung('dreiD', ev.target.checked));
+$('schalterBegruessung').addEventListener('change', (ev) => setzeEinstellung('begruessung', ev.target.checked));
+$('knopfAnleitung').addEventListener('click', () => { schliesseEinstellungen(); setTimeout(zeigeBegruessung, 250); });
+
+let resetTimer = null;
+$('knopfReset').addEventListener('click', (ev) => {
+  const k = ev.currentTarget;
+  if (!k.classList.contains('warnung')) {
+    k.classList.add('warnung');
+    k.textContent = 'Wirklich? Nochmal tippen';
+    resetTimer = setTimeout(() => { k.classList.remove('warnung'); k.textContent = 'Spielstand löschen'; }, 3500);
+    return;
+  }
+  clearTimeout(resetTimer);
+  k.classList.remove('warnung');
+  k.textContent = 'Spielstand löschen';
+  try { localStorage.removeItem(SPEICHER); } catch (e) { /* egal */ }
+  speicher.geschafft = 0;
+  speicher.einstellungen = {};
+  schliesseEinstellungen();
+  starteLevel(1);
+  setTimeout(zeigeBegruessung, 300);
+});
+
 /* ---------- Begrüßung ---------- */
 function baueVignette() {
   const stuecke = [
@@ -1375,7 +1705,7 @@ $('knopfLos').addEventListener('click', () => {
 });
 
 // Für Tests und Fehlersuche
-window.Spiel = { spiel, speicher, Puzzle, tippe, zurueck, neuStarten, starteLevel, lade, zeigeBegruessung };
+window.Spiel = { spiel, speicher, Puzzle, Einrichtung, tippe, zurueck, neuStarten, starteLevel, lade, zeigeBegruessung, oeffneEinstellungen, wendeEinrichtungAn };
 
 baueVignette();
 fortsetzen();

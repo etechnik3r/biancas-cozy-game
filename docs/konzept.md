@@ -9,10 +9,10 @@
 **Rahmen:** Browserspiel fürs Handy, erste Version an einem Abend umsetzbar.
 
 ## Spielablauf
-1. Start in der **Leseecke** mit dem Knopf „Weiterlesen“.
-2. **Puzzle:** Gegenstände sortieren, bis jedes Brett nur eine Art enthält.
-3. **Belohnung:** kurze Animation, Nachricht „Schön sortiert, Bianca!“. Etwa alle 2–3 Level wird ein Deko-Gegenstand freigeschaltet.
-4. Zurück in die Leseecke: dekorieren oder weiterspielen.
+1. Beim Start erscheint das **Begrüßungsfenster** (abschaltbar) mit Anleitung. Ein gespeicherter Spielstand wird fortgesetzt.
+2. Im **Puzzle** sortierst du die Gegenstände, bis jedes Brett nur eine Art enthält.
+3. **Belohnung:** Animation, Nachricht „Schön sortiert, Bianca!“, ggf. Hinweis auf neu freigeschaltete Tapeten oder Regale.
+4. Weiter zum nächsten Regal. Über das Zahnrad oben rechts kann jederzeit eingerichtet werden.
 
 ## Puzzle-Regeln
 - Regalbretter liegen **untereinander** (Hochformat). Gegenstände stehen nebeneinander, bewegt wird immer der **rechte äußere**.
@@ -49,10 +49,27 @@ Immer 2 leere Bretter mehr als Arten. Level werden zufällig erzeugt und vor der
 - **Teekannen** dampfen.
 - **Bücher** rücken zusammen und leuchten kurz auf.
 
-## Leseecke
-- **5 feste Plätze:** Fensterbank (Pflanze), Tisch (Teekanne/Tasse), Sessel, Lampe, Regal-Deko.
-- Jeder Platz hat **3–4 Varianten**, freigeschaltete Varianten wechseln per **Antippen**. Kein Drag & Drop.
-- Insgesamt ca. 15–20 Freischaltungen, Motivation für ca. 40–50 Level.
+## Einrichten (ersetzt die ursprünglich geplante Leseecke)
+Über das Zahnrad oben rechts öffnet sich das Menü „Einrichten“.
+
+**Themen** (die Tapete wechselt mit jedem Regal innerhalb des Themas):
+| Thema | Tapeten | Frei |
+|---|---|---|
+| Bibliothek | Streifen, Rauten, Punkte | sofort |
+| Wintergarten | Blätterranke, Rankgitter, Streifen | sofort |
+| Teestube | Blümchen, Vichy-Karo, Punkte | sofort |
+| Abendstunde (dunkel, Sterne) | Sterne, Rauten, Streifen | nach Regal 6 |
+| Nordisch hell | Zickzack, Punkte, Rankgitter | nach Regal 12 |
+| Herbstlaube | Blätterranke, Karo, Rauten | nach Regal 20 |
+
+**Regale:** Eiche, Ahorn hell, Nussbaum (sofort), Weiß lackiert (nach Regal 3), Salbei lackiert (nach 8), Antik mit Goldkante (nach 15).
+
+**Darstellung:** Räumliche Regale an/aus (Standard: an), Begrüßung beim Start an/aus. Außerdem: Anleitung ansehen, Spielstand löschen (mit Rückfrage).
+
+## Speichern
+- `localStorage`, Schlüssel `biancas-leseecke-v1`: Level, Anzahl geschaffter Regale, aktuelle Aufstellung inkl. Zurück-Verlauf, Einstellungen.
+- Gespeicherte Daten werden vor Verwendung geprüft. Ist etwas ungültig, startet das Level frisch.
+- Ohne verfügbaren Speicher läuft das Spiel normal, nur ohne Fortsetzen.
 
 ## Grafik
 - **Parametrisch erzeugte Inline-SVGs**, eine Generator-Funktion pro Art. Keine Emojis.
@@ -83,7 +100,7 @@ Immer 2 leere Bretter mehr als Arten. Level werden zufällig erzeugt und vor der
 - Offline lauffähig.
 
 ## Bewusst nicht in v1
-Freies Platzieren von Deko, Gäste und Geschichten, gezeichnete Grafiken, Bestenlisten.
+Leseecke mit Deko-Plätzen, freies Platzieren von Deko, Gäste und Geschichten, gezeichnete Grafiken, Bestenlisten.
 
 ## Umsetzung in Häppchen
 1. **Grafik-Musterblatt:** alle Gegenstände in mehreren Varianten, Stil mit Bastian abstimmen.
