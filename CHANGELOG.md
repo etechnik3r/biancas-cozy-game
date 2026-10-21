@@ -5,6 +5,8 @@ Alle wesentlichen Änderungen an „Biancas Leseecke“. Neueste Einträge oben.
 ## Unveröffentlicht
 
 ### Behoben
+- 2026-10-21: Zahnrad-Symbol war asymmetrisch (Zahnkranz gut 1 px über dem Mittelloch). Neu berechnet mit 8 gleichmäßigen Zähnen um den exakten Mittelpunkt.
+- 2026-10-21: Brett in der Begrüßungs-Vignette war seit dem Regal-Umbau unsichtbar. Wird jetzt mit dem Regal-Zeichner und dem gewählten Holz dargestellt.
 - 2026-10-21: Menü und Fenster lagen nach dem Regal-Umbau hinter den Brettern.
 
 ### Hinzugefügt
@@ -14,6 +16,7 @@ Alle wesentlichen Änderungen an „Biancas Leseecke“. Neueste Einträge oben.
 - 2026-10-21: Spielbares Puzzle (`index.html`): endlose Level mit Lösbarkeitsprüfung, Tippen zum Heben und Ablegen, Gleit-Animationen, unbegrenztes Zurück, Neu starten, Belohnung pro fertigem Brett (Dampf bei Teekannen, Blüten bei Pflanzen/Kakteen, Goldglanz bei Büchern), Gewinnkarte „Schön sortiert, Bianca!“.
 
 ### Geändert
+- 2026-10-21: Begrüßungstext gekürzt und persönlich: „Hallo Bianca, mach es dir gemütlich …“, drei kurze Schritte, Hinweis mit Zahnrad-Symbol auf Tapete und Regal.
 - 2026-10-21: Regale komplett neu: Das Regal ist jetzt ein zusammenhängend gezeichnetes Möbel (SVG) mit prozeduraler Holzmaserung. Räumlich: Korpus mit Krone, Sockel, Seitenwangen, Rückwand aus Brettern, sichtbaren Innenseiten, Brettoberseiten in Zentralperspektive und Schattenwurf. Flach: Wandbretter auf schmiedeeisernen Konsolen. Neues Holz „Altes Bauernholz“ mit Ästen, Rissen, Nägeln und abgestoßenen Kanten (sofort frei). Vorschauen im Menü zeigen das echte Regal.
 - 2026-10-21: Die geplante Leseecke mit Deko-Plätzen entfällt. Das Einrichten läuft über Themen, Tapeten und Regale.
 - 2026-10-21: Musterblatt überarbeitet: plastischere Grafiken (Verläufe, Glasur-Glanz, feine Kontur, Goldprägung), deutlich mehr Formen je Art, Teekannen farbig glasiert statt weißem Porzellan, Regal mit Holzmaserung und Tapete, 12 Varianten je Art.

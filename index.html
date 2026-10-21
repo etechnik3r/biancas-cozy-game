@@ -204,7 +204,9 @@
   .vignette .stueck { flex: 0 1 62px; height: 96px; min-width: 0; }
   .vignette .stueck svg { height: 100%; width: 100%; display: block; }
   .vignette .stueck.klein { flex-basis: 54px; height: 70px; }
-  .vignette .holz { left: 18px; right: 18px; bottom: 6px; }
+  .vignette { padding-bottom: 34px !important; }
+  .vignette .stueck { position: relative; z-index: 1; }
+  .vignette .regal-bild { z-index: 0; }
   .ueber {
     margin: 20px 0 2px !important;
     font-size: .72rem;
@@ -224,6 +226,10 @@
     background: #f1e4cf; box-shadow: inset 0 0 0 1px rgba(133,85,47,.22);
   }
   .karte .leise-text { font-size: .86rem; color: var(--tinte-hell); margin: 0 24px 16px; }
+  .karte .gruss { margin: 4px 24px 6px; font-style: italic; color: var(--tinte); line-height: 1.4; }
+  .zahnrad-hinweis { display: flex; align-items: center; justify-content: center; gap: 8px; text-align: left; }
+  .mini-zahnrad { flex: 0 0 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: #f1e4cf; color: #85552f; }
+  .mini-zahnrad svg { width: 18px; height: 18px; }
   .haken {
     display: inline-flex; align-items: center; gap: 10px;
     min-height: 44px; margin-top: 6px; padding: 0 8px;
@@ -309,9 +315,9 @@
   .neu-frei .chip b { font-weight: normal; color: #a5523f; }
 
   @media (max-height: 640px) {
-    .vignette { height: 100px; padding-bottom: 12px; }
-    .vignette .stueck { height: 70px; }
-    .vignette .stueck.klein { height: 52px; }
+    .vignette { height: 112px; }
+    .vignette .stueck { height: 64px; }
+    .vignette .stueck.klein { height: 48px; }
     .ueber { margin-top: 12px !important; }
     .titel { font-size: 1.7rem !important; }
     .anleitung { font-size: .92rem; margin-bottom: 8px; }
@@ -327,7 +333,7 @@
     <div class="kopf-rechts">
       <span class="level" id="levelAnzeige"></span>
       <button type="button" class="zahnrad" id="knopfEinstellungen" aria-label="Einstellungen">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 2.6h3.4l.5 2.6 1.6.9 2.5-.9 1.7 2.9-2 1.8v1.9l2 1.8-1.7 2.9-2.5-.9-1.6.9-.5 2.6h-3.4l-.5-2.6-1.6-.9-2.5.9-1.7-2.9 2-1.8v-1.9l-2-1.8 1.7-2.9 2.5.9 1.6-.9z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.40 5.08 L10.66 2.49 L13.34 2.49 L13.60 5.08 L15.76 5.98 L17.78 4.33 L19.67 6.22 L18.02 8.24 L18.92 10.40 L21.51 10.66 L21.51 13.34 L18.92 13.60 L18.02 15.76 L19.67 17.78 L17.78 19.67 L15.76 18.02 L13.60 18.92 L13.34 21.51 L10.66 21.51 L10.40 18.92 L8.24 18.02 L6.22 19.67 L4.33 17.78 L5.98 15.76 L5.08 13.60 L2.49 13.34 L2.49 10.66 L5.08 10.40 L5.98 8.24 L4.33 6.22 L6.22 4.33 L8.24 5.98Z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
     </div>
   </header>
@@ -357,19 +363,20 @@
 <div class="schleier" id="begruessung" role="dialog" aria-modal="true" aria-labelledby="begruessungTitel">
   <div class="karte gross">
     <div class="vignette" id="vignette" aria-hidden="true"></div>
-    <p class="ueber">Ein ruhiges Sortierspiel</p>
+    <p class="ueber">Für dich gemacht</p>
     <h2 class="titel" id="begruessungTitel"><em>Biancas</em> Leseecke</h2>
     <svg class="ornament" viewBox="0 0 132 14" aria-hidden="true">
       <path d="M2 7 H50 M82 7 H130" stroke="#c9b08a" stroke-width="1"/>
       <path d="M66 1 C70 4 70 10 66 13 C62 10 62 4 66 1Z" fill="#a5523f" opacity=".85"/>
       <path d="M56 7 C59 3.5 62 4.5 63.5 7 C62 9.5 59 10.5 56 7Z M76 7 C73 3.5 70 4.5 68.5 7 C70 9.5 73 10.5 76 7Z" fill="#7ea486"/>
     </svg>
+    <p class="gruss">Hallo Bianca, mach es dir gemütlich. Hier gibt es keine Uhr und keinen Druck.</p>
     <ol class="anleitung">
-      <li><span class="nr">1</span><span>Tippe ein Brett an. Der Gegenstand ganz rechts hebt sich.</span></li>
-      <li><span class="nr">2</span><span>Tippe ein anderes Brett an. Er wandert dorthin – auf Gleiches oder auf ein freies Brett.</span></li>
-      <li><span class="nr">3</span><span>Sortiere, bis jedes Brett nur noch eine Sorte trägt. Keine Uhr, kein Druck.</span></li>
+      <li><span class="nr">1</span><span>Tippe ein Brett an.</span></li>
+      <li><span class="nr">2</span><span>Tippe ein zweites Brett an. Der Gegenstand wandert dorthin.</span></li>
+      <li><span class="nr">3</span><span>Sortiere, bis jedes Brett nur eine Sorte trägt.</span></li>
     </ol>
-    <p class="leise-text">Mit jedem Regal kannst du neue Tapeten und Regale freischalten. Du findest sie über das Zahnrad oben rechts.</p>
+    <p class="leise-text zahnrad-hinweis"><span class="mini-zahnrad" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M10.40 5.08 L10.66 2.49 L13.34 2.49 L13.60 5.08 L15.76 5.98 L17.78 4.33 L19.67 6.22 L18.02 8.24 L18.92 10.40 L21.51 10.66 L21.51 13.34 L18.92 13.60 L18.02 15.76 L19.67 17.78 L17.78 19.67 L15.76 18.02 L13.60 18.92 L13.34 21.51 L10.66 21.51 L10.40 18.92 L8.24 18.02 L6.22 19.67 L4.33 17.78 L5.98 15.76 L5.08 13.60 L2.49 13.34 L2.49 10.66 L5.08 10.40 L5.98 8.24 L4.33 6.22 L6.22 4.33 L8.24 5.98Z"/><circle cx="12" cy="12" r="3"/></svg></span><span>Oben rechts kannst du dir Tapete und Regal aussuchen.</span></p>
     <button type="button" id="knopfLos">Los geht’s</button><br>
     <label class="haken"><input type="checkbox" id="nichtMehr"><span class="kasten"></span>Beim Start nicht mehr zeigen</label>
   </div>
@@ -1837,13 +1844,20 @@ function baueVignette() {
   ];
   const v = $('vignette');
   v.innerHTML = stuecke.map(([art, seed, kl]) => `<div class="stueck ${kl}">${Grafik.ARTEN[art].zeichne(seed)}</div>`).join('')
-    + '<div class="holz"></div>';
+    + '<img class="regal-bild" alt="">';
+}
+function zeichneVignettenBrett() {
+  const v = $('vignette'), bild = v.querySelector('.regal-bild');
+  const W = v.clientWidth, H = v.clientHeight;
+  if (!W) return;
+  bild.src = Holz.alsBild(Holz.zeichne({ W, H, L: 16, R: W - 16, bretter: [{ top: 0, bottom: H - 21 }], holz: einstellung().regalObj.id, dreid: false, seed: 3 }));
 }
 
 function zeigeBegruessung() {
   $('knopfLos').textContent = spiel.level > 1 || spiel.verlauf.length ? `Weiter mit Regal ${spiel.level}` : 'Los geht’s';
   $('nichtMehr').checked = speicher.einstellungen.begruessung === false;
   $('begruessung').classList.add('offen');
+  requestAnimationFrame(zeichneVignettenBrett);
 }
 
 $('knopfLos').addEventListener('click', () => {
