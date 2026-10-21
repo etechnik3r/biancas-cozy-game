@@ -4,6 +4,9 @@ Alle wesentlichen Änderungen an „Biancas Leseecke“. Neueste Einträge oben.
 
 ## Unveröffentlicht
 
+### Hinzugefügt
+- 2026-10-21: Spielbares Puzzle (`index.html`): endlose Level mit Lösbarkeitsprüfung, Tippen zum Heben und Ablegen, Gleit-Animationen, unbegrenztes Zurück, Neu starten, Belohnung pro fertigem Brett (Dampf bei Teekannen, Blüten bei Pflanzen/Kakteen, Goldglanz bei Büchern), Gewinnkarte „Schön sortiert, Bianca!“.
+
 ### Geändert
 - 2026-10-21: Musterblatt überarbeitet: plastischere Grafiken (Verläufe, Glasur-Glanz, feine Kontur, Goldprägung), deutlich mehr Formen je Art, Teekannen farbig glasiert statt weißem Porzellan, Regal mit Holzmaserung und Tapete, 12 Varianten je Art.
 

@@ -37,6 +37,9 @@ Dieses Repo enthält „Biancas Leseecke“, ein Cozy-Browserspiel für Biancas 
 - Offline lauffähig, keine externen Abhängigkeiten zur Laufzeit.
 - Aufwand im Blick behalten: Ziel ist eine erste Version an einem Abend. Neue Ideen erst in `docs/offene-punkte.md` unter „Später“ notieren, nicht direkt einbauen.
 
+## Grafik-Generatoren
+- Der Block `GRAFIK-GENERATOREN` steht identisch in `index.html` und `musterblatt.html`. Änderungen immer in beiden Dateien vornehmen (oder von `index.html` ins Musterblatt kopieren).
+
 ## Testen
 - Jede Änderung im Browser in Handygröße prüfen (ca. 375 × 667 px).
 - Puzzle-Logik: Jedes erzeugte Level muss vom Löser als lösbar bestätigt sein.

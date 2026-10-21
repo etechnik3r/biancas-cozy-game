@@ -16,7 +16,7 @@
 
 ## Puzzle-Regeln
 - Regalbretter liegen **untereinander** (Hochformat). Gegenstände stehen nebeneinander, bewegt wird immer der **rechte äußere**.
-- **Bedienung:** Brett antippen → Gegenstand hebt sich. Zielbrett antippen → Gegenstand wandert hinüber.
+- **Bedienung:** Brett antippen → Gegenstand hebt sich. Zielbrett antippen → Gegenstand wandert hinüber. Bei einem ungültigen Zug wackelt die Auswahl kurz, und das angetippte Brett wird stattdessen gewählt.
 - Erlaubt, wenn das Zielbrett **leer** ist oder der rechte Gegenstand dort **dieselbe Art** hat und Platz frei ist.
 - Jedes Brett fasst **4 Gegenstände**. Liegen mehrere gleiche Gegenstände rechts nebeneinander, wandern so viele mit, wie hinüberpassen.
 - **Keine Uhr, kein Zuglimit.** Knöpfe „Rückgängig“ (unbegrenzt) und „Neu starten“.
@@ -30,9 +30,9 @@
 | Buch grün | 4 |
 | Kaktus | 11 |
 | Buch blau | 21 |
-| Teetasse | ggf. später |
+| Teetasse | vorerst nicht |
 
-Die genaue Reihenfolge der Freischaltung ist offen (siehe `offene-punkte.md`). Schon die ersten Level mischen Bücher, Pflanzen und Teekannen.
+Schon die ersten Level mischen Bücher, Pflanzen und Teekannen. Die Teetasse ist vorerst nicht im Puzzle.
 
 ## Schwierigkeit
 | Level | Arten | Bretter |
