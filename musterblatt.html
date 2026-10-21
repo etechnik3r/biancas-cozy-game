@@ -7,13 +7,12 @@
 <style>
   :root {
     --papier: #f6efe4;
-    --papier-dunkel: #ebe0cf;
-    --holz: #b4825a;
-    --holz-dunkel: #8a5d3b;
-    --holz-kante: #6e4529;
+    --papier-dunkel: #e9dcc8;
     --tinte: #4a3b30;
     --tinte-hell: #8a7766;
-    --akzent: #c8574d;
+    --holz-oben: #cfa175;
+    --holz: #a8734a;
+    --holz-dunkel: #85552f;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
@@ -27,7 +26,8 @@
     margin: 0 auto;
   }
   h1 { font-size: 1.55rem; margin: 0 0 4px; font-weight: normal; }
-  h2 { font-size: 1.15rem; margin: 32px 0 6px; font-weight: normal; border-bottom: 1px solid var(--papier-dunkel); padding-bottom: 4px; }
+  h2 { font-size: 1.15rem; margin: 32px 0 2px; font-weight: normal; }
+  .formen { margin: 0 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--papier-dunkel); }
   p { margin: 0 0 10px; }
   .klein { color: var(--tinte-hell); font-size: .9rem; }
   .knopfzeile { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 14px 0 0; }
@@ -44,7 +44,7 @@
   button:active { transform: translateY(1px); }
   .raster {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
     gap: 8px;
   }
   .kachel {
@@ -57,30 +57,36 @@
 
   /* Regal-Vorschau in Spielgröße */
   .regal {
-    background: #efe2cd;
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(255,250,240,.55), rgba(255,250,240,0) 70%),
+      repeating-linear-gradient(90deg, #ecdcc2 0 18px, #e8d6ba 18px 19px, #ecdcc2 19px 36px, #efe1c9 36px 37px);
     border-radius: 14px;
-    padding: 10px 10px 4px;
+    padding: 12px 10px 6px;
     max-width: 375px;
+    box-shadow: inset 0 0 0 1px rgba(74,59,48,.08), inset 0 10px 24px -14px rgba(74,59,48,.35);
   }
-  .brett { position: relative; height: var(--brett-h, 64px); margin-bottom: 8px; }
+  .brett { position: relative; height: var(--brett-h, 64px); margin-bottom: 10px; }
   .brett .plaetze {
-    position: absolute; inset: 0 6px 10px;
+    position: absolute; inset: 0 8px 11px;
     display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: 100%;
   }
   .brett .plaetze > div { min-height: 0; min-width: 0; }
   .brett .plaetze svg { width: 100%; height: 100%; display: block; }
   .brett .holz {
-    position: absolute; left: 0; right: 0; bottom: 0; height: 12px;
-    background: linear-gradient(var(--holz) 0 60%, var(--holz-dunkel) 60%);
+    position: absolute; left: 0; right: 0; bottom: 0; height: 13px;
     border-radius: 3px;
-    box-shadow: 0 2px 0 var(--holz-kante);
+    background:
+      linear-gradient(var(--holz-oben) 0 3px, transparent 3px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0) 0 23px, rgba(255,255,255,.07) 23px 26px, rgba(0,0,0,0) 26px 61px, rgba(60,30,10,.08) 61px 63px),
+      linear-gradient(var(--holz), var(--holz-dunkel));
+    box-shadow: 0 1px 0 #6b4024, 0 7px 8px -5px rgba(60,35,15,.45);
   }
 </style>
 </head>
 <body>
 
 <h1>Biancas Leseecke</h1>
-<p class="klein">Grafik-Musterblatt · alle Gegenstände werden per Code aus Parametern gezeichnet, jede Variante ist etwas anders.</p>
+<p class="klein">Grafik-Musterblatt · alle Gegenstände werden per Code aus Parametern gezeichnet. Jede Kachel ist ein eigener Startwert.</p>
 
 <div class="knopfzeile">
   <button id="wuerfeln" type="button">Neue Varianten würfeln</button>
@@ -101,12 +107,24 @@
    Dieser Block wird später unverändert in index.html übernommen.
    Jede Funktion liefert einen SVG-String mit viewBox 0 0 100 120.
    Standfläche ist y = 116, damit alle Gegenstände auf dem Brett stehen.
+
+   Erkennungsmerkmal je Art (bleibt in allen Varianten gleich):
+   - Bücher: Farbe + goldenes Emblem (rot = Ring, grün = Blatt, blau = Stern)
+   - Topfpflanze: Terrakotta-Topf
+   - Kaktus: cremefarbener Keramiktopf, stachelige Form
+   - Teekanne: Tülle + Deckel
+   - Teetasse: Untertasse + offener Rand mit Tee
    ===================================================================== */
 const Grafik = (() => {
   let uid = 0;
-  const id = (p) => `${p}${++uid}`;
 
-  // Kleiner, reproduzierbarer Zufallsgenerator (mulberry32)
+  // ---------- Hilfsfunktionen ----------
+  const f = (n) => Math.round(n * 100) / 100;
+  // Template-Tag: rundet alle Zahlen auf 2 Nachkommastellen (kompaktes SVG)
+  const P = (str, ...v) => str.reduce((a, s, i) =>
+    a + s + (i < v.length ? (typeof v[i] === 'number' ? f(v[i]) : v[i]) : ''), '');
+
+  // Reproduzierbarer Zufallsgenerator (mulberry32)
   function rng(seed) {
     let a = seed >>> 0;
     return () => {
@@ -119,257 +137,637 @@ const Grafik = (() => {
   }
   const zw = (r, a, b) => a + r() * (b - a);
   const wahl = (r, liste) => liste[Math.floor(r() * liste.length)];
-
-  // Farbe leicht variieren (Helligkeit), damit Gegenstände lebendig wirken
-  function nuance(hex, betrag) {
-    const n = parseInt(hex.slice(1), 16);
-    const f = (c) => Math.max(0, Math.min(255, Math.round(c + betrag * 255)));
-    const r = f(n >> 16), g = f((n >> 8) & 255), b = f(n & 255);
-    return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
-  }
-
-  const PALETTE = {
-    buch: {
-      rot:   { grund: '#c8574d', schatten: '#9c3f37' },
-      gruen: { grund: '#6f9a6b', schatten: '#4f7650' },
-      blau:  { grund: '#5b7fa8', schatten: '#41608a' },
-    },
-    gold: '#e7c46a',
-    creme: '#f7eedd',
-    ton: '#c97b4f', tonKante: '#a9603a', tonSchatten: '#9e5634',
-    blatt: ['#6fa36a', '#5c9460', '#82b071'],
-    blattDunkel: '#4c7d4f',
-    kaktus: '#7fae86', kaktusDunkel: '#5f8d68', kaktusHell: '#a5cba9',
-    keramik: '#efe3cf', keramikKante: '#d9c7aa', keramikBand: '#5b7fa8',
-    porzellan: '#f7f1e6', porzellanSchatten: '#ddd0bc',
-    muster: ['#c8574d', '#5b7fa8', '#6f9a6b', '#d49a3a'],
-    tasse: ['#e3a49b', '#9cc3c9', '#e9c77a', '#b9a6d6'],
-    tee: '#a8693b',
+  const gewichtet = (r, paare) => {
+    let x = r() * paare.reduce((s, [, g]) => s + g, 0);
+    for (const [w, g] of paare) if ((x -= g) < 0) return w;
+    return paare[paare.length - 1][0];
   };
 
-  const boden = '<ellipse cx="50" cy="117" rx="30" ry="2.6" fill="#4a3b30" opacity=".14"/>';
-  const svg = (inhalt, label) =>
-    `<svg viewBox="0 0 100 120" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${label}">${boden}${inhalt}</svg>`;
+  const hexRgb = (h) => { const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
+  const rgbHex = (c) => '#' + ((1 << 24) | (c[0] << 16) | (c[1] << 8) | c[2]).toString(16).slice(1);
+  // t > 0 heller (Richtung Weiß), t < 0 dunkler (Richtung Schwarz)
+  const nuance = (hex, t) => rgbHex(hexRgb(hex).map((v) => Math.round(t >= 0 ? v + (255 - v) * t : v * (1 + t))));
 
-  /* ---------- Buch ---------- */
-  function buch(seed, farbe) {
-    const r = rng(seed);
-    const p = PALETTE.buch[farbe];
-    const d = zw(r, -0.05, 0.05);
-    const grund = nuance(p.grund, d), schatten = nuance(p.schatten, d);
-    const w = zw(r, 40, 54), h = zw(r, 84, 106);
-    const x = 50 - w / 2, y = 116 - h;
-    const kant = w * 0.2;
-    let baender = '';
-    // Jede Farbe hat ein eigenes Bandmuster (hilft bei Farbschwäche)
-    if (farbe === 'rot') {
-      for (const yy of [y + h * 0.12, y + h * 0.82]) {
-        baender += `<rect x="${x}" y="${yy}" width="${w}" height="3.2" fill="${PALETTE.gold}"/>`;
-        baender += `<rect x="${x}" y="${yy + 5}" width="${w}" height="1.4" fill="${PALETTE.gold}" opacity=".8"/>`;
-      }
-    } else if (farbe === 'gruen') {
-      const yy = y + h * zw(r, 0.38, 0.48);
-      baender += `<rect x="${x}" y="${yy}" width="${w}" height="${h * 0.16}" fill="${schatten}"/>`;
-      baender += `<circle cx="50" cy="${yy + h * 0.08}" r="3.4" fill="${PALETTE.gold}"/>`;
-      baender += `<rect x="${x}" y="${y + h * 0.9}" width="${w}" height="2" fill="${PALETTE.gold}" opacity=".85"/>`;
-    } else {
-      for (let i = 0; i < 3; i++) {
-        baender += `<rect x="${x}" y="${y + h * 0.1 + i * 5}" width="${w}" height="2" fill="${PALETTE.gold}"/>`;
-      }
-      baender += `<path d="M${50 - 5} ${y + h * 0.78} l5 -6 l5 6 l-5 6z" fill="${PALETTE.gold}"/>`;
-    }
-    // Titelschild
-    const schild = r() < 0.7
-      ? `<rect x="${x + w * 0.2}" y="${y + h * zw(r, 0.24, 0.3)}" width="${w * 0.6}" height="${h * 0.09}" rx="1.5" fill="${PALETTE.creme}" opacity=".92"/>
-         <rect x="${x + w * 0.28}" y="${y + h * 0.27 + 1}" width="${w * 0.44}" height="1.3" fill="${schatten}" opacity=".5"/>`
-      : '';
-    const clip = id('b');
-    return svg(`
-      <defs><clipPath id="${clip}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4"/></clipPath></defs>
-      <g clip-path="url(#${clip})">
-        <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${grund}"/>
-        ${baender}${schild}
-        <rect x="${x + w - kant}" y="${y}" width="${kant}" height="${h}" fill="${schatten}" opacity=".55"/>
-        <rect x="${x + 3}" y="${y}" width="3.2" height="${h}" fill="#fff" opacity=".22"/>
-      </g>`, `Buch ${farbe}`);
-  }
-
-  /* ---------- Topf (gemeinsam für Pflanzen) ---------- */
-  function topf(oben, unten, hoehe, farbe, kante, schatten, extra = '') {
-    const y0 = 116 - hoehe;
-    const clip = id('t');
+  // Sammelt <defs> (Verläufe, Clip-Pfade) für ein einzelnes SVG
+  function Defs() {
+    const teile = [];
+    const stops = (s) => s.map(([o, c, op]) =>
+      `<stop offset="${o}" stop-color="${c}"${op != null ? ` stop-opacity="${op}"` : ''}/>`).join('');
     return {
-      y0,
-      svg: `
-      <defs><clipPath id="${clip}"><path d="M${50 - oben / 2} ${y0} L${50 + oben / 2} ${y0} L${50 + unten / 2} 116 L${50 - unten / 2} 116 Z"/></clipPath></defs>
-      <g clip-path="url(#${clip})">
-        <rect x="0" y="${y0}" width="100" height="${hoehe}" fill="${farbe}"/>
-        ${extra}
-        <rect x="${50 + oben * 0.18}" y="${y0}" width="${oben}" height="${hoehe}" fill="${schatten}" opacity=".45"/>
-      </g>
-      <rect x="${50 - oben / 2 - 3}" y="${y0 - 3}" width="${oben + 6}" height="8" rx="2" fill="${kante}"/>
-      <rect x="${50 - oben / 2 - 3}" y="${y0 - 3}" width="${oben + 6}" height="2.4" rx="1.2" fill="#fff" opacity=".2"/>`,
+      lin(s, x1 = 0, y1 = 0, x2 = 1, y2 = 0) {
+        const id = 'g' + (++uid);
+        teile.push(`<linearGradient id="${id}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">${stops(s)}</linearGradient>`);
+        return `url(#${id})`;
+      },
+      rad(s, cx = .35, cy = .3, r = .85) {
+        const id = 'g' + (++uid);
+        teile.push(`<radialGradient id="${id}" cx="${cx}" cy="${cy}" r="${r}">${stops(s)}</radialGradient>`);
+        return `url(#${id})`;
+      },
+      clip(inhalt) {
+        const id = 'c' + (++uid);
+        teile.push(`<clipPath id="${id}">${inhalt}</clipPath>`);
+        return `url(#${id})`;
+      },
+      html: () => (teile.length ? `<defs>${teile.join('')}</defs>` : ''),
     };
   }
 
-  /* ---------- Topfpflanze ---------- */
-  function pflanze(seed) {
-    const r = rng(seed);
-    const t = topf(54, 40, zw(r, 30, 36), PALETTE.ton, PALETTE.tonKante, PALETTE.tonSchatten);
-    const basisY = t.y0 - 1;
-    const n = Math.round(zw(r, 5, 8));
-    const gruen = wahl(r, PALETTE.blatt);
-    const blaetter = [];
-    for (let i = 0; i < n; i++) {
-      const winkel = -62 + (124 * i) / (n - 1) + zw(r, -8, 8);
-      const laenge = zw(r, 38, 58) * (1 - Math.abs(winkel) / 260);
-      const breite = zw(r, 9, 13);
-      blaetter.push({ winkel, laenge, breite, hinten: Math.abs(winkel) > 30 });
-    }
-    // Hintere (äußere) Blätter zuerst und dunkler
-    blaetter.sort((a, b) => Math.abs(b.winkel) - Math.abs(a.winkel));
-    const blattSvg = blaetter.map((b) => {
-      const l = b.laenge, w = b.breite;
-      const f = b.hinten ? nuance(gruen, -0.07) : gruen;
-      return `<g transform="translate(50 ${basisY}) rotate(${b.winkel.toFixed(1)})">
-        <path d="M0 0 C${w} ${-l * 0.3} ${w * 0.9} ${-l * 0.8} 0 ${-l} C${-w * 0.9} ${-l * 0.8} ${-w} ${-l * 0.3} 0 0Z" fill="${f}"/>
-        <path d="M0 0 C${-w * 0.9} ${-l * 0.3} ${-w * 0.8} ${-l * 0.8} 0 ${-l} L0 0Z" fill="#fff" opacity=".12"/>
-        <path d="M0 -2 L0 ${-l * 0.85}" stroke="${PALETTE.blattDunkel}" stroke-width="1.2" opacity=".45" stroke-linecap="round"/>
-      </g>`;
-    }).join('');
-    return svg(blattSvg + t.svg, 'Topfpflanze');
+  // Zylindrische Schattierung: Licht von links oben
+  const zyl = (d, c, k = 1) => d.lin([[0, nuance(c, .16 * k)], [.28, nuance(c, .06 * k)], [.62, c], [1, nuance(c, -.24 * k)]]);
+  // Glasierte Keramik: runder Glanzverlauf
+  const glasur = (d, c) => d.rad([[0, nuance(c, .38)], [.45, c], [1, nuance(c, -.26)]], .32, .28, .9);
+
+  const TINTE = 'stroke="#3b2c22" stroke-opacity=".42" stroke-width="1.3" stroke-linejoin="round"';
+  const GOLD_HELL = '#f2d891', GOLD = '#d4ae57', GOLD_DUNKEL = '#a4803a';
+  const CREME = '#f7efdf';
+  const PORZELLAN = '#f6efe2';
+
+  function svg(d, inhalt, label, schatten = 30) {
+    return `<svg viewBox="0 0 100 120" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${label}">`
+      + d.html()
+      + P`<ellipse cx="50" cy="116.6" rx="${schatten}" ry="2.8" fill="#3b2c22" opacity=".17"/>`
+      + inhalt + '</svg>';
   }
 
-  /* ---------- Kaktus ---------- */
-  function kaktus(seed) {
-    const r = rng(seed);
-    const band = `<rect x="0" y="${116 - 16}" width="100" height="4" fill="${PALETTE.keramikBand}" opacity=".85"/>`;
-    const t = topf(46, 36, 28, PALETTE.keramik, PALETTE.keramikKante, PALETTE.porzellanSchatten, band);
-    const bw = zw(r, 26, 32), bh = zw(r, 52, 70);
-    const bx = 50 - bw / 2, by = t.y0 + 2 - bh;
-    const armeAnzahl = Math.round(zw(r, 0, 2));
-    let arme = '';
-    const seiten = armeAnzahl === 2 ? [-1, 1] : armeAnzahl === 1 ? [wahl(r, [-1, 1])] : [];
-    for (const s of seiten) {
-      const ay = by + bh * zw(r, 0.35, 0.55);
-      const ah = zw(r, 18, 26), aw = 11;
-      const ax = s < 0 ? bx - aw - 2 : bx + bw + 2;
-      arme += `<rect x="${s < 0 ? ax + aw / 2 : bx + bw - 2}" y="${ay}" width="${aw / 2 + 4}" height="${aw}" rx="${aw / 2}" fill="${PALETTE.kaktus}"/>
-               <rect x="${ax}" y="${ay - ah + aw}" width="${aw}" height="${ah}" rx="${aw / 2}" fill="${PALETTE.kaktus}"/>
-               <rect x="${ax + aw * 0.62}" y="${ay - ah + aw + 2}" width="${aw * 0.3}" height="${ah - 4}" rx="2" fill="${PALETTE.kaktusDunkel}" opacity=".5"/>`;
+  /* =================== BÜCHER =================== */
+  const BUCHFARBEN = { rot: '#b5463e', gruen: '#5a875c', blau: '#4c6c97' };
+
+  function emblem(farbe, cx, cy, s, gold, grund) {
+    if (farbe === 'rot') {
+      return P`<circle cx="${cx}" cy="${cy}" r="${s}" fill="${gold}"/><circle cx="${cx}" cy="${cy}" r="${s * .48}" fill="${grund}"/>`;
     }
-    // Rippen und Stacheln
-    let rippen = '';
-    for (const fx of [0.33, 0.66]) {
-      rippen += `<path d="M${bx + bw * fx} ${by + 6} L${bx + bw * fx} ${by + bh - 2}" stroke="${PALETTE.kaktusDunkel}" stroke-width="1.3" opacity=".45"/>`;
+    if (farbe === 'gruen') {
+      return P`<path d="M${cx} ${cy - s * 1.2} C${cx + s} ${cy - s * .4} ${cx + s * .7} ${cy + s * .8} ${cx} ${cy + s * 1.2} C${cx - s * .7} ${cy + s * .8} ${cx - s} ${cy - s * .4} ${cx} ${cy - s * 1.2}Z" fill="${gold}"/>`
+        + P`<path d="M${cx} ${cy - s * .7} L${cx} ${cy + s * .9}" stroke="${grund}" stroke-width=".9"/>`;
     }
-    let stacheln = '';
-    for (let i = 0; i < 14; i++) {
-      const sx = bx + zw(r, 4, bw - 4), sy = by + zw(r, 6, bh - 6);
-      stacheln += `<path d="M${sx - 1.6} ${sy - 1.6} l3.2 3.2 M${sx + 1.6} ${sy - 1.6} l-3.2 3.2" stroke="${PALETTE.creme}" stroke-width=".9" opacity=".9"/>`;
+    let p = '';
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI) / 5, rr = i % 2 ? s * .46 : s * 1.15;
+      p += (i ? 'L' : 'M') + f(cx + Math.cos(a) * rr) + ' ' + f(cy + Math.sin(a) * rr);
     }
-    const bluete = r() < 0.5
-      ? [0, 72, 144, 216, 288].map((a) => {
-          const rad = (a * Math.PI) / 180;
-          return `<circle cx="${50 + Math.cos(rad) * 3.6}" cy="${by + 1 + Math.sin(rad) * 3.6}" r="3.4" fill="#e8909a"/>`;
-        }).join('') + `<circle cx="50" cy="${by + 1}" r="2.2" fill="${PALETTE.gold}"/>`
-      : '';
-    return svg(`
-      ${arme}
-      <rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="${bw / 2}" fill="${PALETTE.kaktus}"/>
-      <rect x="${bx + bw * 0.62}" y="${by + 4}" width="${bw * 0.38}" height="${bh - 6}" rx="${bw * 0.19}" fill="${PALETTE.kaktusDunkel}" opacity=".45"/>
-      <rect x="${bx + 4}" y="${by + 8}" width="3" height="${bh * 0.55}" rx="1.5" fill="${PALETTE.kaktusHell}" opacity=".7"/>
-      ${rippen}${stacheln}${bluete}
-      ${t.svg}`, 'Kaktus');
+    return `<path d="${p}Z" fill="${gold}"/>`;
   }
 
-  /* ---------- Teekanne ---------- */
-  function teekanne(seed) {
-    const r = rng(seed);
-    const farbe = wahl(r, PALETTE.muster);
-    const art = wahl(r, ['punkte', 'streifen', 'bluemchen']);
-    const rx = zw(r, 28, 31), ry = zw(r, 24, 27);
-    const cy = 112 - ry;
-    const clip = id('k');
-    let muster = '';
-    if (art === 'punkte') {
-      for (let yy = cy - ry; yy < cy + ry; yy += 9) {
-        for (let xx = 50 - rx + ((yy / 9) % 2 ? 4.5 : 0); xx < 50 + rx; xx += 9) {
-          muster += `<circle cx="${xx}" cy="${yy}" r="2" fill="${farbe}"/>`;
-        }
+  // Stehender Buchrücken
+  function ruecken(r, d, farbe, x, y, w, h, gold) {
+    const grund = nuance(BUCHFARBEN[farbe], zw(r, -.08, .08));
+    const dunkel = nuance(grund, -.3);
+    const stil = wahl(r, ['klassisch', 'buende', 'halbleder']);
+    const es = Math.min(w * .17, 5.5);
+    const linie = (yy, hh) => P`<rect x="${x + .6}" y="${yy}" width="${w - 1.2}" height="${hh}" fill="${gold}"/>`;
+    let s = P`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2.4" fill="${zyl(d, grund)}"/>`;
+
+    if (stil === 'klassisch') {
+      for (const yy of [y + h * .07, y + h * .87]) s += linie(yy, 2.2) + linie(yy + 3.6, .9);
+      const ly = y + h * zw(r, .2, .25), lh = Math.max(7, h * .1);
+      s += P`<rect x="${x + w * .17}" y="${ly}" width="${w * .66}" height="${lh}" rx="1" fill="${CREME}" stroke="${gold}" stroke-width=".8"/>`;
+      s += P`<rect x="${x + w * .28}" y="${ly + lh * .33}" width="${w * .44}" height="1.1" fill="${dunkel}" opacity=".55"/>`;
+      s += P`<rect x="${x + w * .34}" y="${ly + lh * .62}" width="${w * .32}" height="1" fill="${dunkel}" opacity=".4"/>`;
+      s += emblem(farbe, x + w / 2, y + h * .6, es, gold, grund);
+    } else if (stil === 'buende') {
+      s += P`<rect x="${x + 1.2}" y="${y + h * .1 + 2.4}" width="${w - 2.4}" height="${h * .2 - 4.8}" fill="${dunkel}" opacity=".6"/>`;
+      s += linie(y + h * .2 - .45, .9);
+      for (const t of [.1, .3, .7, .9]) {
+        const yy = y + h * t;
+        s += P`<rect x="${x - .5}" y="${yy - 2.3}" width="${w + 1}" height="4.6" rx="2.2" fill="${dunkel}"/>`;
+        s += P`<rect x="${x + .8}" y="${yy - 2}" width="${w - 1.6}" height="1.1" rx=".5" fill="#fff" opacity=".25"/>`;
       }
-    } else if (art === 'streifen') {
-      for (let yy = cy - ry + 8; yy < cy + ry; yy += 9) {
-        muster += `<rect x="0" y="${yy}" width="100" height="3" fill="${farbe}" opacity=".85"/>`;
-      }
+      s += emblem(farbe, x + w / 2, y + h * .5, es, gold, grund);
     } else {
-      const orte = [[-14, -6], [8, -12], [16, 6], [-4, 10], [-18, 12]];
-      for (const [dx, dy] of orte) {
-        const x = 50 + dx, y = cy + dy;
-        for (let a = 0; a < 5; a++) {
-          const rad = (a * 72 * Math.PI) / 180;
-          muster += `<circle cx="${x + Math.cos(rad) * 2.6}" cy="${y + Math.sin(rad) * 2.6}" r="2.2" fill="${farbe}"/>`;
-        }
-        muster += `<circle cx="${x}" cy="${y}" r="1.4" fill="${PALETTE.gold}"/>`;
-      }
+      const k = h * zw(r, .14, .2);
+      s += P`<rect x="${x}" y="${y}" width="${w}" height="${k}" rx="2.4" fill="${dunkel}"/>`;
+      s += P`<rect x="${x}" y="${y + h - k}" width="${w}" height="${k}" rx="2.4" fill="${dunkel}"/>`;
+      s += linie(y + k - .7, 1.4) + linie(y + h - k - .7, 1.4);
+      for (let i = 1; i < 6; i++) s += P`<rect x="${x + (w * i) / 6}" y="${y + k}" width=".5" height="${h - 2 * k}" fill="#fff" opacity=".08"/>`;
+      s += emblem(farbe, x + w / 2, y + h * .5, es * 1.15, gold, grund);
     }
-    const tuelle = `<path d="M${50 + rx - 6} ${cy + 4} C${50 + rx + 8} ${cy + 2} ${50 + rx + 10} ${cy - 14} ${50 + rx + 16} ${cy - 24}
-                    L${50 + rx + 20} ${cy - 22} C${50 + rx + 16} ${cy - 10} ${50 + rx + 14} ${cy + 14} ${50 + rx - 6} ${cy + 14}Z"
-                    fill="${PALETTE.porzellan}" stroke="${PALETTE.porzellanSchatten}" stroke-width="1"/>`;
-    const henkel = `<path d="M${50 - rx + 4} ${cy - ry * 0.55} C${50 - rx - 16} ${cy - ry * 0.6} ${50 - rx - 16} ${cy + ry * 0.55} ${50 - rx + 4} ${cy + ry * 0.4}"
-                    fill="none" stroke="${PALETTE.porzellanSchatten}" stroke-width="7.5" stroke-linecap="round"/>
-                    <path d="M${50 - rx + 4} ${cy - ry * 0.55} C${50 - rx - 16} ${cy - ry * 0.6} ${50 - rx - 16} ${cy + ry * 0.55} ${50 - rx + 4} ${cy + ry * 0.4}"
-                    fill="none" stroke="${PALETTE.porzellan}" stroke-width="4.5" stroke-linecap="round"/>`;
-    const deckelY = cy - ry + 3;
-    return svg(`
-      <defs><clipPath id="${clip}"><ellipse cx="50" cy="${cy}" rx="${rx}" ry="${ry}"/></clipPath></defs>
-      ${henkel}${tuelle}
-      <rect x="${50 - rx * 0.55}" y="${cy + ry - 6}" width="${rx * 1.1}" height="9" rx="3" fill="${PALETTE.porzellanSchatten}"/>
-      <g clip-path="url(#${clip})">
-        <rect x="0" y="0" width="100" height="120" fill="${PALETTE.porzellan}"/>
-        ${muster}
-        <ellipse cx="${50 + rx * 0.55}" cy="${cy + 4}" rx="${rx * 0.75}" ry="${ry * 1.2}" fill="${PALETTE.porzellanSchatten}" opacity=".55"/>
-      </g>
-      <ellipse cx="${50 - rx * 0.42}" cy="${cy - ry * 0.35}" rx="6" ry="3.4" transform="rotate(-30 ${50 - rx * 0.42} ${cy - ry * 0.35})" fill="#fff" opacity=".75"/>
-      <path d="M${50 - 16} ${deckelY} Q50 ${deckelY - 14} ${50 + 16} ${deckelY}Z" fill="${PALETTE.porzellan}" stroke="${PALETTE.porzellanSchatten}" stroke-width="1"/>
-      <rect x="${50 - 18}" y="${deckelY - 1}" width="36" height="4" rx="2" fill="${farbe}"/>
-      <circle cx="50" cy="${deckelY - 11}" r="4.2" fill="${farbe}"/>
-      <circle cx="48.6" cy="${deckelY - 12.4}" r="1.3" fill="#fff" opacity=".6"/>`, 'Teekanne');
+    s += P`<rect x="${x + w * .12}" y="${y + 1.5}" width="${Math.max(1.6, w * .07)}" height="${h - 3}" rx="1" fill="#fff" opacity=".2"/>`;
+    s += P`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2.4" fill="none" ${TINTE}/>`;
+    return s;
   }
 
-  /* ---------- Teetasse ---------- */
+  // Liegendes Buch (für Stapel)
+  function liegend(r, d, farbe, x, y, w, h, gold) {
+    const grund = nuance(BUCHFARBEN[farbe], zw(r, -.08, .08));
+    const fuell = d.lin([[0, nuance(grund, .18)], [.35, grund], [1, nuance(grund, -.25)]], 0, 0, 0, 1);
+    let s = P`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2.2" fill="${fuell}"/>`;
+    for (const t of [.07, .88]) {
+      s += P`<rect x="${x + w * t}" y="${y + .6}" width="2.1" height="${h - 1.2}" fill="${gold}"/>`;
+      s += P`<rect x="${x + w * t + 3.6}" y="${y + .6}" width=".9" height="${h - 1.2}" fill="${gold}"/>`;
+    }
+    s += P`<rect x="${x + w * .24}" y="${y + h / 2 - .5}" width="${w * .16}" height="1" fill="${gold}" opacity=".85"/>`;
+    s += P`<rect x="${x + w * .6}" y="${y + h / 2 - .5}" width="${w * .16}" height="1" fill="${gold}" opacity=".85"/>`;
+    s += emblem(farbe, x + w / 2, y + h / 2, Math.min(h * .27, 4.6), gold, grund);
+    s += P`<rect x="${x + 2}" y="${y + h * .16}" width="${w - 4}" height="1.1" rx=".5" fill="#fff" opacity=".24"/>`;
+    s += P`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2.2" fill="none" ${TINTE}/>`;
+    return s;
+  }
+
+  function buch(seed, farbe) {
+    const r = rng(seed), d = Defs();
+    const gold = d.lin([[0, GOLD_HELL], [.5, GOLD], [1, GOLD_DUNKEL]], 0, 0, 0, 1);
+    const form = gewichtet(r, [['einzeln', 5], ['paar', 2.5], ['stapel', 2]]);
+    let s = '', schatten = 28;
+    if (form === 'einzeln') {
+      const w = zw(r, 36, 46), h = zw(r, 86, 106);
+      s = ruecken(r, d, farbe, 50 - w / 2, 116 - h, w, h, gold);
+      schatten = w * .75;
+    } else if (form === 'paar') {
+      const w1 = zw(r, 22, 27), w2 = zw(r, 20, 26), h1 = zw(r, 84, 104), h2 = zw(r, 78, 100);
+      const x0 = 50 - (w1 + w2 + 1) / 2;
+      s = ruecken(r, d, farbe, x0, 116 - h1, w1, h1, gold) + ruecken(r, d, farbe, x0 + w1 + 1, 116 - h2, w2, h2, gold);
+      schatten = (w1 + w2) * .65;
+    } else {
+      let y = 116;
+      const n = r() < .5 ? 3 : 4;
+      for (let i = 0; i < n; i++) {
+        const h = zw(r, 12, 16), w = zw(r, 64, 82) - i * 3;
+        y -= h;
+        s += liegend(r, d, farbe, 50 - w / 2 + zw(r, -4, 4), y, w, h, gold);
+        y -= .3;
+      }
+      schatten = 38;
+    }
+    return svg(d, s, 'Buch ' + ({ rot: 'rot', gruen: 'grün', blau: 'blau' })[farbe], schatten);
+  }
+
+  /* =================== TOPFPFLANZE =================== */
+  function terrakotta(r, d) {
+    const form = gewichtet(r, [['konisch', 3], ['bauchig', 2], ['untersetzer', 2]]);
+    const ton = nuance('#c4774c', zw(r, -.06, .06));
+    const boden = form === 'untersetzer' ? 110.5 : 116;
+    const h = zw(r, 25, 31), ob = zw(r, 46, 54), un = ob * zw(r, .68, .76);
+    const y0 = boden - h;
+    const koerper = form === 'bauchig'
+      ? P`M${50 - ob / 2} ${y0} C${50 - ob / 2 - 5} ${y0 + h * .55} ${50 - un / 2 - 2} ${boden} ${50 - un / 2 + 3} ${boden} L${50 + un / 2 - 3} ${boden} C${50 + un / 2 + 2} ${boden} ${50 + ob / 2 + 5} ${y0 + h * .55} ${50 + ob / 2} ${y0}Z`
+      : P`M${50 - ob / 2} ${y0} L${50 - un / 2} ${boden} L${50 + un / 2} ${boden} L${50 + ob / 2} ${y0}Z`;
+    let s = '';
+    if (form === 'untersetzer') {
+      s += P`<path d="M${50 - ob / 2 - 3} 110 L${50 + ob / 2 + 3} 110 L${50 + ob / 2 - 1} 116 L${50 - ob / 2 + 1} 116Z" fill="${zyl(d, nuance(ton, -.06))}" ${TINTE}/>`;
+    }
+    s += P`<path d="${koerper}" fill="${zyl(d, ton)}" ${TINTE}/>`;
+    s += P`<path d="M${50 - ob / 2 + 2} ${y0 + 4.2} L${50 + ob / 2 - 2} ${y0 + 4.2}" stroke="#3b2c22" stroke-opacity=".2" stroke-width="2.4"/>`;
+    const rand = y0 - 5;
+    s += P`<rect x="${50 - ob / 2 - 3.5}" y="${rand}" width="${ob + 7}" height="9" rx="2" fill="${zyl(d, nuance(ton, .05))}" ${TINTE}/>`;
+    s += P`<rect x="${50 - ob / 2 - 1.5}" y="${rand + 1.3}" width="${ob + 3}" height="1.3" rx=".6" fill="#fff" opacity=".3"/>`;
+    return { oben: rand, breite: ob, svg: s };
+  }
+
+  function laubRosette(r, d, by) {
+    const gr = wahl(r, ['#6aa067', '#5d9562', '#7cad6c']);
+    const vorn = d.lin([[0, nuance(gr, -.28)], [.6, gr], [1, nuance(gr, .22)]], 0, 1, 0, 0);
+    const hint = d.lin([[0, nuance(gr, -.42)], [1, nuance(gr, -.06)]], 0, 1, 0, 0);
+    const n = Math.round(zw(r, 6, 9));
+    const bl = [];
+    for (let i = 0; i < n; i++) {
+      const wi = -64 + (128 * i) / (n - 1) + zw(r, -7, 7);
+      bl.push({ wi, l: zw(r, 40, 60) * (1 - Math.abs(wi) / 240), w: zw(r, 9, 13) });
+    }
+    bl.sort((a, b) => Math.abs(b.wi) - Math.abs(a.wi));
+    return bl.map(({ wi, l, w }) =>
+      P`<g transform="translate(50 ${by}) rotate(${wi})"><path d="M0 0 C${w} ${-l * .3} ${w * .9} ${-l * .8} 0 ${-l} C${-w * .9} ${-l * .8} ${-w} ${-l * .3} 0 0Z" fill="${Math.abs(wi) > 32 ? hint : vorn}" ${TINTE}/>`
+      + P`<path d="M0 -3 Q${w * .15} ${-l * .5} 0 ${-l * .86}" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="1"/></g>`).join('');
+  }
+
+  function laubPilea(r, d, by) {
+    const gr = nuance('#79a85a', zw(r, -.06, .06));
+    const blatt = d.rad([[0, nuance(gr, .32)], [.6, gr], [1, nuance(gr, -.22)]], .4, .35, .75);
+    const n = Math.round(zw(r, 8, 11));
+    const st = [];
+    for (let i = 0; i < n; i++) {
+      const a = ((-70 + (140 * i) / (n - 1) + zw(r, -8, 8)) * Math.PI) / 180;
+      const l = zw(r, 24, 46) * (1 - Math.abs(a) / 5);
+      st.push({
+        x0: 50 + zw(r, -4, 4),
+        cx: 50 + Math.sin(a) * l * .3, cy: by - Math.cos(a) * l * .75,
+        tx: 50 + Math.sin(a) * l, ty: by - Math.cos(a) * l,
+        s: zw(r, 6.5, 9.5),
+      });
+    }
+    st.sort((a, b) => a.ty - b.ty);
+    let s = st.map((p) => P`<path d="M${p.x0} ${by + 2} Q${p.cx} ${p.cy} ${p.tx} ${p.ty}" fill="none" stroke="#5f7f45" stroke-width="1.5" stroke-linecap="round"/>`).join('');
+    s += st.map((p) => P`<ellipse cx="${p.tx}" cy="${p.ty}" rx="${p.s}" ry="${p.s * .88}" fill="${blatt}" ${TINTE}/><circle cx="${p.tx}" cy="${p.ty + p.s * .1}" r="1.1" fill="${nuance(gr, .45)}"/>`).join('');
+    return s;
+  }
+
+  function laubBogenhanf(r, d, by) {
+    const gr = nuance('#3f6e4c', zw(r, -.05, .05));
+    const fuell = d.lin([[0, nuance(gr, -.22)], [1, nuance(gr, .28)]], 0, 1, 0, 0);
+    const n = Math.round(zw(r, 5, 7));
+    const mitte = (n - 1) / 2;
+    const reihen = [];
+    for (let i = 0; i < n; i++) {
+      const rel = i - mitte;
+      reihen.push({
+        off: rel * zw(r, 4, 6),
+        h: zw(r, 52, 74) * (1 - Math.abs(rel) / (n * 1.3)),
+        w: zw(r, 8, 11),
+        lean: rel * zw(r, 3, 6) + zw(r, -3, 3),
+        rel,
+      });
+    }
+    reihen.sort((a, b) => Math.abs(b.rel) - Math.abs(a.rel));
+    return reihen.map(({ off, h, w, lean }) => {
+      let b = P`<g transform="translate(${50 + off} ${by + 2}) rotate(${lean})"><path d="M${-w / 2} 0 C${-w / 2} ${-h * .55} ${-w * .25} ${-h * .9} 0 ${-h} C${w * .25} ${-h * .9} ${w / 2} ${-h * .55} ${w / 2} 0Z" fill="${fuell}" stroke="#d6c46c" stroke-width="1.3"/>`;
+      for (let k = 1; k <= 4; k++) {
+        const yy = -h * (.12 + k * .15), bw = w * .72 * (1 - k * .12);
+        b += P`<path d="M${-bw / 2} ${yy} q${bw / 2} -2.2 ${bw} 0" fill="none" stroke="#b3d0a2" stroke-opacity=".38" stroke-width="1.1"/>`;
+      }
+      return b + '</g>';
+    }).join('');
+  }
+
+  const herz = (s) => P`M0 ${s} C${-s * 1.25} ${s * .15} ${-s * .95} ${-s * .95} 0 ${-s * .45} C${s * .95} ${-s * .95} ${s * 1.25} ${s * .15} 0 ${s}Z`;
+
+  function laubEfeutute(r, d, by, topfBreite) {
+    const gr = nuance('#6aa25a', zw(r, -.05, .05));
+    const fuell = d.lin([[0, nuance(gr, .24)], [1, nuance(gr, -.2)]], 0, 0, 1, 1);
+    const blatt = (x, y, s, rot) =>
+      P`<g transform="translate(${x} ${y}) rotate(${rot})"><path d="${herz(s)}" fill="${fuell}" ${TINTE}/>`
+      + P`<path d="M0 ${s * .8} L0 ${-s * .3}" stroke="#fff" stroke-opacity=".3" stroke-width=".9"/>`
+      + P`<path d="M${-s * .35} ${-s * .1} q${s * .2} ${s * .5} ${s * .05} ${s * .8}" stroke="#f1e7a6" stroke-opacity=".5" stroke-width="1.6" fill="none"/></g>`;
+    const pts = [];
+    const n = Math.round(zw(r, 8, 11));
+    for (let i = 0; i < n; i++) {
+      const x = 50 + zw(r, -22, 22);
+      pts.push({ x, y: by - 6 - zw(r, 2, 26) * (1 - Math.abs(x - 50) / 38), s: zw(r, 8, 10.5), rot: 180 + (x - 50) * 2 + zw(r, -25, 25) });
+    }
+    pts.sort((a, b) => a.y - b.y);
+    const hinten = pts.map((p) => blatt(p.x, p.y, p.s, p.rot)).join('');
+    let vorn = '';
+    const seiten = r() < .5 ? [wahl(r, [-1, 1])] : [-1, 1];
+    for (const sd of seiten) {
+      const sx = 50 + sd * (topfBreite / 2 - 2), sy = by + 3;
+      const ex = 50 + sd * (topfBreite / 2 + zw(r, 4, 9)), ey = zw(r, 98, 110);
+      vorn += P`<path d="M${sx} ${sy} C${sx + sd * 10} ${sy + 6} ${ex + sd * 2} ${ey - 20} ${ex} ${ey}" fill="none" stroke="#5f8a45" stroke-width="1.4"/>`;
+      for (let k = 1; k <= 3; k++) {
+        const t = k / 3.2;
+        const px = sx + (ex - sx) * t + sd * 6 * Math.sin(t * Math.PI), py = sy + (ey - sy) * t;
+        vorn += blatt(px, py, 7.4 - k * .5, sd * zw(r, -35, 5));
+      }
+    }
+    return { hinten, vorn };
+  }
+
+  function laubFarn(r, d, by) {
+    const gr = nuance('#6e9f55', zw(r, -.05, .06));
+    const n = Math.round(zw(r, 6, 8));
+    const wedel = [];
+    for (let i = 0; i < n; i++) {
+      const a = -72 + (144 * i) / (n - 1) + zw(r, -6, 6);
+      wedel.push({ a, l: zw(r, 40, 56) * (1 - Math.abs(a) / 320) });
+    }
+    wedel.sort((x, y) => Math.abs(y.a) - Math.abs(x.a));
+    let s = '';
+    for (const { a, l } of wedel) {
+      const rad = (a * Math.PI) / 180;
+      const p0 = [50, by + 2];
+      const p1 = [50 + Math.sin(rad) * l * .45, by - Math.cos(rad) * l * .95 - 6];
+      const p2 = [50 + Math.sin(rad) * l, by - Math.cos(rad) * l + Math.abs(Math.sin(rad)) * l * .35];
+      const farbe = Math.abs(a) > 35 ? nuance(gr, -.16) : gr;
+      s += P`<path d="M${p0[0]} ${p0[1]} Q${p1[0]} ${p1[1]} ${p2[0]} ${p2[1]}" fill="none" stroke="${nuance(gr, -.35)}" stroke-width="1.2"/>`;
+      for (let t = .12; t < .97; t += .075) {
+        const u = 1 - t;
+        const px = u * u * p0[0] + 2 * u * t * p1[0] + t * t * p2[0];
+        const py = u * u * p0[1] + 2 * u * t * p1[1] + t * t * p2[1];
+        const tx = 2 * u * (p1[0] - p0[0]) + 2 * t * (p2[0] - p1[0]);
+        const ty = 2 * u * (p1[1] - p0[1]) + 2 * t * (p2[1] - p1[1]);
+        const tw = Math.atan2(ty, tx);
+        const g = 5.4 * (1 - t * .62);
+        for (const sd of [-1, 1]) {
+          const th = tw + (sd * 55 * Math.PI) / 180;
+          const cx = px + Math.cos(th) * g * .85, cy = py + Math.sin(th) * g * .85;
+          s += P`<ellipse cx="${cx}" cy="${cy}" rx="${g}" ry="${g * .4}" transform="rotate(${(th * 180) / Math.PI} ${cx} ${cy})" fill="${farbe}"/>`;
+        }
+      }
+    }
+    return s;
+  }
+
+  function pflanze(seed) {
+    const r = rng(seed), d = Defs();
+    const topf = terrakotta(r, d);
+    const art = wahl(r, ['rosette', 'pilea', 'bogenhanf', 'efeutute', 'farn']);
+    const by = topf.oben + 3;
+    let hinten = '', vorn = '';
+    if (art === 'rosette') hinten = laubRosette(r, d, by);
+    else if (art === 'pilea') hinten = laubPilea(r, d, by);
+    else if (art === 'bogenhanf') hinten = laubBogenhanf(r, d, by);
+    else if (art === 'farn') hinten = laubFarn(r, d, by);
+    else ({ hinten, vorn } = laubEfeutute(r, d, by, topf.breite));
+    return svg(d, hinten + topf.svg + vorn, 'Topfpflanze', topf.breite * .6);
+  }
+
+  /* =================== KAKTUS =================== */
+  function keramiktopf(r, d) {
+    const grund = nuance('#efe4d0', zw(r, -.03, .02));
+    const farbe = wahl(r, ['#5f80aa', '#cf8a83', '#7ea486', '#cc9a3f']);
+    const deko = wahl(r, ['band', 'doppel', 'zacken', 'punkte']);
+    const h = zw(r, 24, 29), ob = zw(r, 40, 48), un = ob * .8, y0 = 116 - h;
+    const koerper = P`M${50 - ob / 2} ${y0} L${50 - un / 2} 113.5 Q${50 - un / 2} 116 ${50 - un / 2 + 3} 116 L${50 + un / 2 - 3} 116 Q${50 + un / 2} 116 ${50 + un / 2} 113.5 L${50 + ob / 2} ${y0}Z`;
+    const clip = d.clip(`<path d="${koerper}"/>`);
+    const my = y0 + h * .5;
+    let m = '';
+    if (deko === 'band') m = P`<rect x="0" y="${my - 2.6}" width="100" height="5.2" fill="${farbe}"/>`;
+    else if (deko === 'doppel') m = P`<rect x="0" y="${my - 4.4}" width="100" height="2.4" fill="${farbe}"/><rect x="0" y="${my + 1.8}" width="100" height="2.4" fill="${farbe}"/>`;
+    else if (deko === 'zacken') {
+      let p = `M0 ${f(my)}`;
+      for (let x = 0; x <= 100; x += 5) p += ` L${x} ${f(my + (x % 10 ? -3 : 3))}`;
+      m = `<path d="${p}" fill="none" stroke="${farbe}" stroke-width="2"/>`;
+    } else {
+      for (let x = 2; x < 100; x += 7) m += P`<circle cx="${x}" cy="${my}" r="1.9" fill="${farbe}"/>`;
+      m += P`<rect x="0" y="${my + 4}" width="100" height="1" fill="${farbe}" opacity=".7"/>`;
+    }
+    let s = P`<path d="${koerper}" fill="${zyl(d, grund, .9)}"/>`
+      + `<g clip-path="${clip}">${m}`
+      + P`<rect x="${50 + ob * .14}" y="${y0}" width="${ob}" height="${h}" fill="#3b2c22" opacity=".1"/></g>`
+      + P`<path d="${koerper}" fill="none" ${TINTE}/>`
+      + P`<rect x="${50 - ob / 2 + 4}" y="${y0 + 3}" width="2.4" height="${h - 8}" rx="1.2" fill="#fff" opacity=".6"/>`;
+    s += P`<rect x="${50 - ob / 2 - 2.5}" y="${y0 - 4}" width="${ob + 5}" height="7" rx="3.5" fill="${zyl(d, grund, .9)}" ${TINTE}/>`;
+    s += P`<rect x="${50 - ob / 2}" y="${y0 - 2.8}" width="${ob}" height="1.2" rx=".6" fill="#fff" opacity=".7"/>`;
+    return { oben: y0 - 4, breite: ob, svg: s };
+  }
+
+  const areole = (x, y) =>
+    P`<circle cx="${x}" cy="${y}" r=".9" fill="${CREME}"/><path d="M${x - 2} ${y - 1} L${x + 2} ${y + 1} M${x - 2} ${y + 1} L${x + 2} ${y - 1}" stroke="${CREME}" stroke-width=".6" opacity=".9"/>`;
+
+  function bluete(x, y, s, farbe) {
+    let b = '';
+    for (let i = 0; i < 6; i++) {
+      const a = i * 60;
+      b += P`<ellipse cx="${x}" cy="${y - s * .55}" rx="${s * .38}" ry="${s * .62}" transform="rotate(${a} ${x} ${y})" fill="${farbe}" stroke="#3b2c22" stroke-opacity=".25" stroke-width=".6"/>`;
+    }
+    return b + P`<circle cx="${x}" cy="${y}" r="${s * .3}" fill="${GOLD}"/>`;
+  }
+
+  function kaktusSaeule(r, d, kg, oben) {
+    const bw = zw(r, 24, 30), bh = zw(r, 50, 68);
+    const bx = 50 - bw / 2, by = oben + 3 - bh;
+    const fuell = zyl(d, kg);
+    let s = '';
+    const anzahl = gewichtet(r, [[0, 1], [1, 2], [2, 2]]);
+    const seiten = anzahl === 2 ? [-1, 1] : anzahl === 1 ? [wahl(r, [-1, 1])] : [];
+    for (const sd of seiten) {
+      // linker Arm; rechter Arm wird gespiegelt
+      const aw = 11, ay = by + bh * zw(r, .38, .55), ah = zw(r, 18, 26);
+      const ax = bx - aw - zw(r, 1, 4), top = ay - ah;
+      const arm = P`<path d="M${bx + 3} ${ay + aw} L${ax + aw / 2} ${ay + aw} Q${ax} ${ay + aw} ${ax} ${ay + aw / 2} L${ax} ${top + aw / 2} A${aw / 2} ${aw / 2} 0 0 1 ${ax + aw} ${top + aw / 2} L${ax + aw} ${ay} L${bx + 3} ${ay}Z" fill="${fuell}" ${TINTE}/>`
+        + P`<path d="M${ax + aw * .5} ${top + 5} L${ax + aw * .5} ${ay + 3}" stroke="${nuance(kg, -.3)}" stroke-opacity=".45" stroke-width="1.1"/>`
+        + areole(ax + aw * .5, top + 9) + areole(ax + aw * .5, ay - 2);
+      s += sd < 0 ? arm : `<g transform="translate(100 0) scale(-1 1)">${arm}</g>`;
+    }
+    s += P`<rect x="${bx}" y="${by}" width="${bw}" height="${bh + 4}" rx="${bw / 2}" fill="${fuell}" ${TINTE}/>`;
+    for (const fx of [.3, .5, .7]) s += P`<path d="M${bx + bw * fx} ${by + 5} L${bx + bw * fx} ${by + bh}" stroke="${nuance(kg, -.3)}" stroke-opacity=".4" stroke-width="1.1"/>`;
+    for (const fx of [.3, .5, .7]) for (let yy = by + 9; yy < by + bh - 2; yy += 9) s += areole(bx + bw * fx, yy + (fx === .5 ? 4.5 : 0));
+    s += P`<rect x="${bx + bw * .14}" y="${by + 7}" width="2.6" height="${bh * .55}" rx="1.3" fill="#fff" opacity=".25"/>`;
+    return { svg: s, spitze: [50, by + 1] };
+  }
+
+  function kaktusKugel(r, d, kg, oben) {
+    const rx = zw(r, 20, 25), ry = zw(r, 17, 23), cy = oben + 4 - ry * .9;
+    const fuell = d.rad([[0, nuance(kg, .28)], [.6, kg], [1, nuance(kg, -.28)]], .35, .3, .85);
+    let s = P`<ellipse cx="50" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fuell}" ${TINTE}/>`;
+    for (const k of [.36, .72]) s += P`<ellipse cx="50" cy="${cy}" rx="${rx * k}" ry="${ry}" fill="none" stroke="${nuance(kg, -.32)}" stroke-opacity=".4" stroke-width="1.1"/>`;
+    s += P`<path d="M50 ${cy - ry} L50 ${cy + ry}" stroke="${nuance(kg, -.32)}" stroke-opacity=".4" stroke-width="1.1"/>`;
+    for (const k of [0, .36, .72]) {
+      for (let t = -.6; t <= .61; t += .3) {
+        const dx = rx * k * Math.sqrt(1 - t * t) * .98;
+        const yy = cy + ry * t;
+        s += areole(50 - dx, yy);
+        if (k) s += areole(50 + dx, yy);
+      }
+    }
+    s += P`<ellipse cx="${50 - rx * .45}" cy="${cy - ry * .45}" rx="${rx * .2}" ry="${ry * .12}" transform="rotate(-30 ${50 - rx * .45} ${cy - ry * .45})" fill="#fff" opacity=".35"/>`;
+    return { svg: s, spitze: [50, cy - ry + 1] };
+  }
+
+  function kaktusOpuntie(r, d, kg, oben) {
+    const fuell = d.rad([[0, nuance(kg, .26)], [.6, kg], [1, nuance(kg, -.25)]], .35, .3, .9);
+    const pad = (cx, cy, rx, ry, rot) => {
+      let p = P`<g transform="rotate(${rot} ${cx} ${cy})"><ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fuell}" ${TINTE}/>`;
+      for (const [fx, fy] of [[-.4, -.45], [.35, -.3], [-.1, 0], [.45, .25], [-.45, .3], [.05, .55], [0, -.7]]) p += areole(cx + rx * fx, cy + ry * fy);
+      return p + '</g>';
+    };
+    const rx0 = zw(r, 12, 14), ry0 = zw(r, 16, 19);
+    const cy0 = oben + 4 - ry0;
+    const kinder = [];
+    const n = Math.round(zw(r, 2, 3));
+    for (let i = 0; i < n; i++) {
+      const a = (i === 0 ? -1 : i === 1 ? 1 : wahl(r, [-1, 1]) * .2) * zw(r, 22, 42);
+      const ar = (a * Math.PI) / 180;
+      const rx = rx0 * zw(r, .7, .85), ry = ry0 * zw(r, .7, .85);
+      const ax = 50 + Math.sin(ar) * ry0 * .8, ay = cy0 - Math.cos(ar) * ry0 * .8;
+      kinder.push({ cx: ax + Math.sin(ar) * ry * .8, cy: ay - Math.cos(ar) * ry * .8, rx, ry, a });
+    }
+    let s = kinder.map((k) => pad(k.cx, k.cy, k.rx, k.ry, k.a)).join('') + pad(50, cy0, rx0, ry0, 0);
+    let spitze = [50, cy0 - ry0];
+    if (r() < .5) {
+      for (const k of kinder) {
+        const ar = (k.a * Math.PI) / 180;
+        const fx = k.cx + Math.sin(ar) * k.ry * .95, fy = k.cy - Math.cos(ar) * k.ry * .95;
+        s += P`<ellipse cx="${fx}" cy="${fy - 2}" rx="3" ry="3.8" fill="#c2456b" ${TINTE}/><ellipse cx="${fx - 1}" cy="${fy - 3.2}" rx=".9" ry="1.3" fill="#fff" opacity=".45"/>`;
+      }
+      spitze = null;
+    } else {
+      const k = kinder.reduce((a, b) => (a.cy < b.cy ? a : b));
+      const ar = (k.a * Math.PI) / 180;
+      spitze = [k.cx + Math.sin(ar) * k.ry, k.cy - Math.cos(ar) * k.ry];
+    }
+    return { svg: s, spitze };
+  }
+
+  function kaktusGruppe(r, d, kg, oben) {
+    const fuellK = d.rad([[0, nuance(kg, .26)], [.6, kg], [1, nuance(kg, -.26)]], .35, .3, .85);
+    const fuellS = zyl(d, nuance(kg, -.05));
+    const mh = zw(r, 28, 38), mw = 13;
+    let s = P`<rect x="${50 - mw / 2}" y="${oben + 3 - mh}" width="${mw}" height="${mh + 3}" rx="${mw / 2}" fill="${fuellS}" ${TINTE}/>`;
+    for (let yy = oben - mh + 10; yy < oben; yy += 7) s += areole(50, yy);
+    const klein = (cx, rr) => {
+      let k = P`<ellipse cx="${cx}" cy="${oben + 3 - rr * .85}" rx="${rr}" ry="${rr * .9}" fill="${fuellK}" ${TINTE}/>`;
+      k += P`<ellipse cx="${cx}" cy="${oben + 3 - rr * .85}" rx="${rr * .45}" ry="${rr * .9}" fill="none" stroke="${nuance(kg, -.32)}" stroke-opacity=".4" stroke-width="1"/>`;
+      k += areole(cx, oben + 3 - rr * 1.4) + areole(cx - rr * .55, oben + 3 - rr * .8) + areole(cx + rr * .55, oben + 3 - rr * .8);
+      return k;
+    };
+    s += klein(50 - zw(r, 11, 14), zw(r, 8, 10)) + klein(50 + zw(r, 11, 14), zw(r, 7, 9));
+    return { svg: s, spitze: [50, oben + 3 - mh + 1] };
+  }
+
+  function kaktus(seed) {
+    const r = rng(seed), d = Defs();
+    const topf = keramiktopf(r, d);
+    const kg = nuance('#77a681', zw(r, -.06, .05));
+    const art = wahl(r, ['saeule', 'kugel', 'opuntie', 'gruppe']);
+    const k = art === 'saeule' ? kaktusSaeule(r, d, kg, topf.oben)
+      : art === 'kugel' ? kaktusKugel(r, d, kg, topf.oben)
+      : art === 'opuntie' ? kaktusOpuntie(r, d, kg, topf.oben)
+      : kaktusGruppe(r, d, kg, topf.oben);
+    let blume = '';
+    if (k.spitze && r() < .5) blume = bluete(k.spitze[0], k.spitze[1], zw(r, 6, 8), wahl(r, ['#e8909a', '#f0b05a', '#e06d7b', '#f3d36c']));
+    return svg(d, k.svg + blume + topf.svg, 'Kaktus', topf.breite * .6);
+  }
+
+  /* =================== TEEKANNE =================== */
+  const GLASUREN = ['#8fae94', '#d38f86', '#6f8fb3', '#d3a24a', '#a98bb0', '#6f9f9b'];
+
+  function teekanne(seed) {
+    const r = rng(seed), d = Defs();
+    const c = nuance(wahl(r, GLASUREN), zw(r, -.06, .06));
+    const form = wahl(r, ['rund', 'birne', 'buegel', 'laterne']);
+    const muster = wahl(r, ['uni', 'punkte', 'streifen', 'bluemchen', 'bordure']);
+    const unten = 111;
+    let koerper, hw, top, mitte, deckel;
+    if (form === 'rund' || form === 'buegel') {
+      hw = form === 'rund' ? zw(r, 28, 31) : zw(r, 31, 34);
+      const ry = form === 'rund' ? zw(r, 25, 28) : zw(r, 19, 22);
+      const cy = unten - ry;
+      koerper = P`M${50 - hw} ${cy} A${hw} ${ry} 0 1 0 ${50 + hw} ${cy} A${hw} ${ry} 0 1 0 ${50 - hw} ${cy}Z`;
+      top = cy - ry; mitte = cy; deckel = hw * .55;
+    } else if (form === 'birne') {
+      hw = zw(r, 27, 30); top = zw(r, 50, 56);
+      const yb = (top + unten) / 2 + 8;
+      koerper = P`M${50 - hw * .48} ${top} C${50 - hw * .55} ${top + 14} ${50 - hw * 1.05} ${top + 22} ${50 - hw} ${yb} C${50 - hw * .95} ${unten - 3} ${50 - hw * .6} ${unten} 50 ${unten} C${50 + hw * .6} ${unten} ${50 + hw * .95} ${unten - 3} ${50 + hw} ${yb} C${50 + hw * 1.05} ${top + 22} ${50 + hw * .55} ${top + 14} ${50 + hw * .48} ${top}Z`;
+      mitte = yb - 2; deckel = hw * .48;
+    } else {
+      hw = zw(r, 24, 27); top = zw(r, 58, 64);
+      koerper = P`M${50 - hw * .72} ${top} Q${50 - hw} ${top} ${50 - hw} ${top + 10} L${50 - hw} ${unten - 7} Q${50 - hw} ${unten} ${50 - hw + 7} ${unten} L${50 + hw - 7} ${unten} Q${50 + hw} ${unten} ${50 + hw} ${unten - 7} L${50 + hw} ${top + 10} Q${50 + hw} ${top} ${50 + hw * .72} ${top}Z`;
+      mitte = (top + unten) / 2; deckel = hw * .72;
+    }
+    const dunkel = nuance(c, -.32);
+    const hell = '#fbf6ec';
+    let s = '';
+
+    // Seitlicher Henkel (hinter dem Körper)
+    if (form !== 'buegel') {
+      const y1 = mitte - (mitte - top) * .5, y2 = mitte + (unten - mitte) * .5;
+      const x1 = 50 - hw * .9 + 4, x2 = 50 - hw + 4;
+      const pfad = P`M${x1} ${y1} C${50 - hw - 18} ${y1 - 2} ${50 - hw - 18} ${y2 + 2} ${x2} ${y2}`;
+      s += `<path d="${pfad}" fill="none" stroke="#3b2c22" stroke-opacity=".5" stroke-width="8.6" stroke-linecap="round"/>`;
+      s += `<path d="${pfad}" fill="none" stroke="${nuance(c, -.05)}" stroke-width="6" stroke-linecap="round"/>`;
+      s += `<path d="${pfad}" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="1.4" stroke-linecap="round" transform="translate(-1 -1)"/>`;
+    }
+    // Tülle
+    const tx0 = 50 + hw - 5, tipX = 50 + hw + zw(r, 14, 18), tipY = top + zw(r, -2, 5);
+    s += P`<path d="M${tx0} ${mitte + 2} C${tx0 + 10} ${mitte} ${tipX - 8} ${tipY + 16} ${tipX - 2} ${tipY} L${tipX + 3} ${tipY + 1.5} C${tipX - 1} ${tipY + 20} ${tx0 + 12} ${mitte + 16} ${tx0 - 2} ${mitte + 14}Z" fill="${zyl(d, c)}" ${TINTE}/>`;
+    // Fuß
+    s += P`<rect x="${50 - hw * .5}" y="${unten - 4}" width="${hw}" height="7" rx="2.5" fill="${dunkel}" ${TINTE}/>`;
+
+    // Körper mit Muster
+    const clip = d.clip(`<path d="${koerper}"/>`);
+    let m = '';
+    if (muster === 'punkte') {
+      let row = 0;
+      for (let y = top + 4; y < unten; y += 7.5, row++) {
+        for (let x = 50 - hw + (row % 2 ? 3.75 : 0); x < 50 + hw; x += 7.5) m += P`<circle cx="${x}" cy="${y}" r="1.6" fill="${hell}"/>`;
+      }
+    } else if (muster === 'streifen') {
+      for (let y = top + 6; y < unten; y += 7.5) m += P`<rect x="0" y="${y}" width="100" height="2.2" fill="${hell}" opacity=".9"/>`;
+    } else if (muster === 'bluemchen') {
+      const nb = Math.round(zw(r, 6, 9));
+      for (let i = 0; i < nb; i++) {
+        const x = 50 + zw(r, -hw * .8, hw * .8), y = zw(r, top + 6, unten - 6);
+        for (let a = 0; a < 5; a++) {
+          const w = (a * 72 * Math.PI) / 180;
+          m += P`<circle cx="${x + Math.cos(w) * 2.3}" cy="${y + Math.sin(w) * 2.3}" r="1.9" fill="${hell}"/>`;
+        }
+        m += P`<circle cx="${x}" cy="${y}" r="1.2" fill="${GOLD}"/>`;
+      }
+    } else if (muster === 'bordure') {
+      m += P`<rect x="0" y="${mitte - 5}" width="100" height="10" fill="${hell}"/>`;
+      for (let x = 50 - hw; x < 50 + hw; x += 6) m += P`<path d="M${x} ${mitte + 3} a3 3 0 0 1 6 0Z" fill="${c}"/>`;
+      m += P`<rect x="0" y="${mitte - 6.6}" width="100" height="1.2" fill="${GOLD}"/><rect x="0" y="${mitte + 5.4}" width="100" height="1.2" fill="${GOLD}"/>`;
+    } else {
+      m += P`<rect x="0" y="${top + 6}" width="100" height="1.2" fill="${GOLD}"/><rect x="0" y="${unten - 7}" width="100" height="1.2" fill="${GOLD}"/>`;
+    }
+    m += P`<ellipse cx="${50 + hw * .55}" cy="${mitte + 8}" rx="${hw * .8}" ry="${(unten - top) * .7}" fill="#3b2c22" opacity=".13"/>`;
+    s += `<path d="${koerper}" fill="${glasur(d, c)}"/><g clip-path="${clip}">${m}</g><path d="${koerper}" fill="none" ${TINTE}/>`;
+    // Glanzlicht
+    const gx = 50 - hw * .45, gy = top + (mitte - top) * .6;
+    s += P`<ellipse cx="${gx}" cy="${gy}" rx="${hw * .2}" ry="${hw * .09}" transform="rotate(-38 ${gx} ${gy})" fill="#fff" opacity=".72"/>`;
+    s += P`<circle cx="${50 - hw * .2}" cy="${top + (mitte - top) * .3}" r="1.3" fill="#fff" opacity=".8"/>`;
+    // Deckel
+    const knauf = d.rad([[0, GOLD_HELL], [.6, GOLD], [1, GOLD_DUNKEL]], .35, .3, .8);
+    s += P`<path d="M${50 - deckel} ${top - 1} Q50 ${top - 15} ${50 + deckel} ${top - 1}Z" fill="${glasur(d, c)}" ${TINTE}/>`;
+    s += P`<rect x="${50 - deckel - 2}" y="${top - 2.2}" width="${deckel * 2 + 4}" height="4.4" rx="2.2" fill="${zyl(d, nuance(c, -.08))}" ${TINTE}/>`;
+    s += P`<circle cx="50" cy="${top - 11.5}" r="4.2" fill="${knauf}" ${TINTE}/>`;
+    // Bügelhenkel aus Bambus
+    if (form === 'buegel') {
+      const b = P`M${50 - hw * .72} ${top + 7} C${50 - hw * .72} ${top - 30} ${50 + hw * .72} ${top - 30} ${50 + hw * .72} ${top + 7}`;
+      s += `<path d="${b}" fill="none" stroke="#5e4329" stroke-width="6" stroke-linecap="round"/>`;
+      s += `<path d="${b}" fill="none" stroke="#c09864" stroke-width="4" stroke-linecap="round"/>`;
+      s += `<path d="${b}" fill="none" stroke="#7d5c38" stroke-width="4" stroke-dasharray="1.2 6"/>`;
+    }
+    return svg(d, s, 'Teekanne', hw * .9);
+  }
+
+  /* =================== TEETASSE =================== */
   function teetasse(seed) {
-    const r = rng(seed);
-    const farbe = wahl(r, PALETTE.tasse);
-    const schatten = nuance(farbe, -0.12);
-    const oben = 80, w = zw(r, 50, 56);
-    const clip = id('c');
-    const koerper = `M${50 - w / 2} ${oben} L${50 + w / 2} ${oben} Q${50 + w / 2 - 2} 110 50 110 Q${50 - w / 2 + 2} 110 ${50 - w / 2} ${oben}Z`;
-    return svg(`
-      <ellipse cx="50" cy="112" rx="42" ry="6.5" fill="${PALETTE.porzellanSchatten}"/>
-      <ellipse cx="50" cy="111" rx="42" ry="5.5" fill="${PALETTE.porzellan}"/>
-      <ellipse cx="50" cy="111" rx="24" ry="3" fill="${PALETTE.porzellanSchatten}" opacity=".7"/>
-      <path d="M${50 + w / 2 - 3} ${oben + 6} C${50 + w / 2 + 14} ${oben + 4} ${50 + w / 2 + 12} ${oben + 26} ${50 + w / 2 - 6} ${oben + 22}"
-            fill="none" stroke="${schatten}" stroke-width="6" stroke-linecap="round"/>
-      <defs><clipPath id="${clip}"><path d="${koerper}"/></clipPath></defs>
-      <g clip-path="url(#${clip})">
-        <rect x="0" y="${oben}" width="100" height="40" fill="${farbe}"/>
-        <rect x="0" y="${oben + 6}" width="100" height="3" fill="#fff" opacity=".55"/>
-        <rect x="${50 + w * 0.12}" y="${oben}" width="${w}" height="40" fill="${schatten}" opacity=".5"/>
-      </g>
-      <ellipse cx="50" cy="${oben}" rx="${w / 2}" ry="5" fill="${PALETTE.porzellan}"/>
-      <ellipse cx="50" cy="${oben + 1}" rx="${w / 2 - 4}" ry="3.4" fill="${PALETTE.tee}"/>
-      <ellipse cx="${50 - w * 0.28}" cy="${oben + 10}" rx="2.6" ry="5" fill="#fff" opacity=".45"/>`, 'Teetasse');
+    const r = rng(seed), d = Defs();
+    const c = nuance(wahl(r, GLASUREN), zw(r, -.06, .08));
+    const form = wahl(r, ['schale', 'tulpe', 'becher']);
+    const muster = wahl(r, ['uni', 'rand', 'punkte', 'band']);
+    const beutel = r() < .35;
+    const b = 109.5;
+    let ob, top, koerper;
+    if (form === 'schale') {
+      ob = zw(r, 30, 33); top = zw(r, 82, 86);
+      const un = ob * .55;
+      koerper = P`M${50 - ob} ${top} C${50 - ob} ${top + (b - top) * .75} ${50 - un} ${b} 50 ${b} C${50 + un} ${b} ${50 + ob} ${top + (b - top) * .75} ${50 + ob} ${top}Z`;
+    } else if (form === 'tulpe') {
+      ob = zw(r, 25, 28); top = zw(r, 70, 76);
+      const un = ob * .6;
+      koerper = P`M${50 - ob} ${top} C${50 - ob * .75} ${top + 12} ${50 - un - 3} ${b - 6} ${50 - un} ${b} L${50 + un} ${b} C${50 + un + 3} ${b - 6} ${50 + ob * .75} ${top + 12} ${50 + ob} ${top}Z`;
+    } else {
+      ob = zw(r, 21, 24); top = zw(r, 66, 72);
+      koerper = P`M${50 - ob} ${top} L${50 - ob} ${b - 5} Q${50 - ob} ${b} ${50 - ob + 5} ${b} L${50 + ob - 5} ${b} Q${50 + ob} ${b} ${50 + ob} ${b - 5} L${50 + ob} ${top}Z`;
+    }
+    const hell = '#fbf6ec';
+    // Untertasse
+    let s = P`<ellipse cx="50" cy="112.6" rx="42" ry="5.2" fill="${nuance(c, -.12)}" ${TINTE}/>`;
+    s += P`<ellipse cx="50" cy="111.3" rx="39.5" ry="3.9" fill="${PORZELLAN}"/>`;
+    s += P`<ellipse cx="50" cy="111.2" rx="24" ry="2.3" fill="#3b2c22" opacity=".1"/>`;
+    // Henkel
+    const hp = P`M${50 + ob * .85} ${top + 5} C${50 + ob + 15} ${top + 2} ${50 + ob + 15} ${top + (b - top) * .75} ${50 + ob * .6} ${b - 5}`;
+    s += `<path d="${hp}" fill="none" stroke="#3b2c22" stroke-opacity=".5" stroke-width="7.4" stroke-linecap="round"/>`;
+    s += `<path d="${hp}" fill="none" stroke="${nuance(c, -.04)}" stroke-width="5" stroke-linecap="round"/>`;
+    // Körper mit Muster
+    const clip = d.clip(`<path d="${koerper}"/>`);
+    let m = '';
+    if (muster === 'rand') m = P`<rect x="0" y="${top + 3}" width="100" height="3.4" fill="${hell}"/><rect x="0" y="${top + 7.4}" width="100" height="1" fill="${GOLD}"/>`;
+    else if (muster === 'punkte') {
+      let row = 0;
+      for (let y = top + 6; y < b; y += 7, row++) for (let x = 50 - ob + (row % 2 ? 3.5 : 0); x < 50 + ob; x += 7) m += P`<circle cx="${x}" cy="${y}" r="1.5" fill="${hell}"/>`;
+    } else if (muster === 'band') {
+      const my = top + (b - top) * .45;
+      m = P`<rect x="0" y="${my - 3.5}" width="100" height="7" fill="${hell}"/>`;
+      for (let x = 50 - ob + 2; x < 50 + ob; x += 6) m += P`<circle cx="${x}" cy="${my}" r="1.4" fill="${c}"/>`;
+    }
+    m += P`<rect x="${50 + ob * .15}" y="${top}" width="${ob * 2}" height="${b - top}" fill="#3b2c22" opacity=".12"/>`;
+    s += `<path d="${koerper}" fill="${glasur(d, c)}"/><g clip-path="${clip}">${m}</g><path d="${koerper}" fill="none" ${TINTE}/>`;
+    s += P`<ellipse cx="${50 - ob * .55}" cy="${top + (b - top) * .38}" rx="2" ry="${(b - top) * .2}" fill="#fff" opacity=".55"/>`;
+    // Rand und Tee
+    const tee = d.rad([[0, '#c98a52'], [1, '#7f4520']], .4, .35, .8);
+    s += P`<ellipse cx="50" cy="${top}" rx="${ob}" ry="4.2" fill="${PORZELLAN}" ${TINTE}/>`;
+    s += P`<ellipse cx="50" cy="${top + .7}" rx="${ob - 3}" ry="2.8" fill="${tee}"/>`;
+    s += P`<ellipse cx="${50 - ob * .3}" cy="${top + .2}" rx="${ob * .22}" ry=".8" fill="#fff" opacity=".35"/>`;
+    // Teebeutel
+    if (beutel) {
+      const sx = 50 - ob * .15, ex = 50 - ob - 1.5;
+      s += P`<path d="M${sx} ${top + .5} Q${50 - ob * .5} ${top - 7} ${ex} ${top + 3} L${ex - .5} ${top + 13}" fill="none" stroke="#8a7766" stroke-width=".8"/>`;
+      s += P`<rect x="${ex - 5}" y="${top + 13}" width="9" height="11" rx="1" fill="#f3e9d6" ${TINTE}/>`;
+      s += P`<path d="M${ex - .5} ${top + 15.5} C${ex + 2.5} ${top + 17} ${ex + 1.5} ${top + 21} ${ex - .5} ${top + 22} C${ex - 2.5} ${top + 21} ${ex - 3.5} ${top + 17} ${ex - .5} ${top + 15.5}Z" fill="#7ea486"/>`;
+    }
+    return svg(d, s, 'Teetasse', 36);
   }
 
   const ARTEN = {
-    buchRot:   { name: 'Buch rot',    zeichne: (s) => buch(s, 'rot') },
-    buchGruen: { name: 'Buch grün',   zeichne: (s) => buch(s, 'gruen') },
-    buchBlau:  { name: 'Buch blau',   zeichne: (s) => buch(s, 'blau') },
-    pflanze:   { name: 'Topfpflanze', zeichne: pflanze },
-    kaktus:    { name: 'Kaktus',      zeichne: kaktus },
-    teekanne:  { name: 'Teekanne',    zeichne: teekanne },
-    teetasse:  { name: 'Teetasse',    zeichne: teetasse },
+    buchRot:   { name: 'Buch rot',    formen: 'Einzeln in 3 Einbänden, Paar, Stapel · Emblem: Ring', zeichne: (s) => buch(s, 'rot') },
+    buchGruen: { name: 'Buch grün',   formen: 'Einzeln in 3 Einbänden, Paar, Stapel · Emblem: Blatt', zeichne: (s) => buch(s, 'gruen') },
+    buchBlau:  { name: 'Buch blau',   formen: 'Einzeln in 3 Einbänden, Paar, Stapel · Emblem: Stern', zeichne: (s) => buch(s, 'blau') },
+    pflanze:   { name: 'Topfpflanze', formen: 'Rosette, Pilea, Bogenhanf, Efeutute, Farn · 3 Topfformen', zeichne: pflanze },
+    kaktus:    { name: 'Kaktus',      formen: 'Säule, Kugel, Opuntie, Gruppe · 4 Topfmuster · mit oder ohne Blüte', zeichne: kaktus },
+    teekanne:  { name: 'Teekanne',    formen: '4 Formen × 6 Glasuren × 5 Muster', zeichne: teekanne },
+    teetasse:  { name: 'Teetasse',    formen: '3 Formen × 6 Glasuren × 4 Muster · mit oder ohne Teebeutel', zeichne: teetasse },
   };
 
   return { ARTEN, rng };
@@ -385,27 +783,28 @@ function zeichneAlles(basis) {
   const r = Grafik.rng(basis);
   const neuerSeed = () => Math.floor(r() * 1e9);
 
-  // Varianten je Art
   sektionen.innerHTML = '';
-  for (const [schluessel, art] of Object.entries(Grafik.ARTEN)) {
+  for (const art of Object.values(Grafik.ARTEN)) {
     const h = document.createElement('h2');
     h.textContent = art.name;
+    const p = document.createElement('p');
+    p.className = 'klein formen';
+    p.textContent = art.formen;
     const raster = document.createElement('div');
     raster.className = 'raster';
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 12; i++) {
       const k = document.createElement('div');
       k.className = 'kachel';
       k.innerHTML = art.zeichne(neuerSeed());
       raster.appendChild(k);
     }
-    sektionen.append(h, raster);
+    sektionen.append(h, p, raster);
   }
 
-  // Regale: gemischte Belegung wie im Spiel
   const schluessel = Object.keys(Grafik.ARTEN);
   const belegung = [];
   for (let b = 0; b < 8; b++) {
-    const anzahl = b >= 6 ? (b === 6 ? 2 : 0) : 4;
+    const anzahl = b < 6 ? 4 : b === 6 ? 2 : 0;
     const reihe = [];
     for (let i = 0; i < anzahl; i++) reihe.push([schluessel[Math.floor(r() * schluessel.length)], neuerSeed()]);
     belegung.push(reihe);

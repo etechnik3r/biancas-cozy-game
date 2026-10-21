@@ -56,14 +56,19 @@ Immer 2 leere Bretter mehr als Arten. Level werden zufällig erzeugt und vor der
 
 ## Grafik
 - **Parametrisch erzeugte Inline-SVGs**, eine Generator-Funktion pro Art. Keine Emojis.
-- Stil: flache Formen, feste warme Palette (Pastell, Holzbraun, Creme), eine Schattenkante und ein Glanzlicht pro Objekt.
-- **Buch:** Rücken mit abgerundeten Ecken, Zierbänder. Parameter: Farbe, Höhe, Breite, Bandposition, Titelstreifen.
-- **Topfpflanze:** Terrakotta-Topf, Blätter als gedrehte Bézier-Formen. Parameter: Blattanzahl, Winkel, Grünton.
-- **Kaktus:** ovaler Körper, Arme, Stachel-Striche. Parameter: Armanzahl, Höhe, optionale Blüte.
-- **Teekanne:** Körper, Tülle, Henkel, Deckelknauf. Parameter: Farbe, Muster (Punkte, Streifen, Blümchen).
-- **Teetasse:** Tasse mit Untertasse, Parameter wie Teekanne.
-- Arten unterscheiden sich vor allem über die **Silhouette**. Buchfarben zusätzlich über unterschiedliche Bandmuster (Farbschwäche).
+- Stil: warme Palette, Verläufe für Volumen (Licht von links oben), Glanzlicht auf Glasur, feine dunkle Kontur, Goldprägung auf Büchern.
+- Jede Art hat ein **festes Erkennungsmerkmal**, alles andere variiert:
+
+| Art | Fest (Erkennung) | Varianten |
+|---|---|---|
+| Buch rot/grün/blau | Farbe + goldenes Emblem (Ring / Blatt / Stern) | Einzeln in 3 Einbänden (klassisch, Bünde, Halbleder), Paar, liegender Stapel |
+| Topfpflanze | Terrakotta-Topf | Rosette, Pilea, Bogenhanf, Efeutute, Farn; Topf konisch, bauchig, mit Untersetzer |
+| Kaktus | Cremefarbener Keramiktopf, Stacheln | Säule, Kugel, Opuntie, Gruppe; 4 Topfmuster; optional Blüte |
+| Teekanne | Tülle + Deckel | 4 Formen (rund, Birne, Bambusbügel, Laterne), 6 Glasuren, 5 Muster |
+| Teetasse | Untertasse + Tee | 3 Formen, 6 Glasuren, 4 Muster, optional Teebeutel |
+
 - Dieselben Generatoren werden in der Leseecke und für die Animationen genutzt.
+- Stand der Generatoren: `musterblatt.html`.
 
 ## Sound
 - Synthetisiert mit der Web Audio API, keine Dateien.
