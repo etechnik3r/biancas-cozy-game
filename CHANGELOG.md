@@ -5,6 +5,7 @@ Alle wesentlichen Änderungen an „Biancas Leseecke“. Neueste Einträge oben.
 ## Unveröffentlicht
 
 ### Hinzugefügt
+- 2026-10-21: Spielstand wird im Browser gespeichert (auch mitten im Level inkl. Zurück-Verlauf). Beim Öffnen geht es dort weiter. Ohne verfügbaren Speicher läuft das Spiel normal weiter.
 - 2026-10-21: Spielbares Puzzle (`index.html`): endlose Level mit Lösbarkeitsprüfung, Tippen zum Heben und Ablegen, Gleit-Animationen, unbegrenztes Zurück, Neu starten, Belohnung pro fertigem Brett (Dampf bei Teekannen, Blüten bei Pflanzen/Kakteen, Goldglanz bei Büchern), Gewinnkarte „Schön sortiert, Bianca!“.
 
 ### Geändert

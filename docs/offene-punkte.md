@@ -12,7 +12,6 @@
 
 ## Zu testen
 - [ ] Level 21+ (8 Bretter): Gegenstände sind auf kleinen Handys recht klein. Auf echtem Gerät prüfen.
-- [ ] Spielstand geht beim Neuladen noch verloren (kommt mit Häppchen 3).
 - [ ] Sound auf iPhone (Stummschalter, Start nach erster Berührung).
 - [ ] Lesbarkeit bei 8 Brettern auf kleinem Handy.
 

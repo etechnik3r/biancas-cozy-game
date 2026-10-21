@@ -1003,6 +1003,36 @@ const spiel = {
   sperre: false,
 };
 
+/* ---------- Speichern (localStorage, darf fehlen) ---------- */
+const SPEICHER = 'biancas-leseecke-v1';
+const speicher = { geschafft: 0, einstellungen: {} };
+
+function speichere(naechstesLevel = false) {
+  const daten = naechstesLevel
+    ? { level: spiel.level + 1, regal: null, start: null, verlauf: [] }
+    : { level: spiel.level, regal: spiel.regal, start: spiel.start, verlauf: spiel.verlauf };
+  try {
+    localStorage.setItem(SPEICHER, JSON.stringify({ version: 1, ...daten, geschafft: speicher.geschafft, einstellungen: speicher.einstellungen }));
+  } catch (e) { /* privates Fenster o. Ä.: Spiel läuft ohne Speichern weiter */ }
+}
+
+function lade() {
+  try {
+    const d = JSON.parse(localStorage.getItem(SPEICHER) || 'null');
+    if (!d || d.version !== 1 || !Number.isInteger(d.level) || d.level < 1) return null;
+    return d;
+  } catch (e) { return null; }
+}
+
+// Prüft eine gespeicherte Aufstellung, bevor sie verwendet wird
+function gueltigeAufstellung(regal, start) {
+  const istRegal = (r) => Array.isArray(r) && r.length >= 3 && r.every((b) => Array.isArray(b) && b.length <= Puzzle.KAPAZITAET
+    && b.every((g) => g && typeof g.id === 'string' && Grafik.ARTEN[g.art] && Number.isFinite(g.seed)));
+  if (!istRegal(regal) || !istRegal(start) || regal.length !== start.length) return false;
+  const ids = (r) => r.flat().map((g) => g.id).sort().join();
+  return ids(regal) === ids(start);
+}
+
 const dingEls = new Map(); // id -> DOM-Element (wird wiederverwendet, damit Animationen gleiten)
 
 function dingEl(ding) {
@@ -1126,7 +1156,11 @@ function tippe(i) {
   }
   if (Puzzle.gewonnen(spiel.regal)) {
     spiel.sperre = true;
+    speicher.geschafft = Math.max(speicher.geschafft, spiel.level);
+    speichere(true);
     setTimeout(zeigeGewinn, 1300);
+  } else {
+    speichere();
   }
 }
 
@@ -1137,6 +1171,7 @@ function zurueck() {
   spiel.regal = Puzzle.ziehe(spiel.regal, b, a, anzahl);
   spiel.auswahl = null;
   zeichne(bewegt);
+  speichere();
 }
 
 function neuStarten() {
@@ -1146,6 +1181,7 @@ function neuStarten() {
   spiel.auswahl = null;
   const alle = spiel.regal.flat().map((g) => g.id);
   zeichne(alle);
+  speichere();
 }
 
 /* ---------- Belohnung pro fertigem Brett ---------- */
@@ -1184,17 +1220,38 @@ function zeigeGewinn() {
   setTimeout(() => $('knopfWeiter').focus(), 350);
 }
 
-function starteLevel(level) {
+function setzeLevel(level, start, regal, verlauf) {
   spiel.level = level;
-  const { regal } = Puzzle.erzeuge(level);
-  spiel.start = regal.map((b) => b.slice());
+  spiel.start = start.map((b) => b.slice());
   spiel.regal = regal.map((b) => b.slice());
-  spiel.verlauf = [];
+  spiel.verlauf = verlauf;
   spiel.auswahl = null;
   spiel.sperre = false;
   dingEls.clear();
   baueBretter(regal.length);
   zeichne();
+}
+
+function starteLevel(level) {
+  const { regal } = Puzzle.erzeuge(level);
+  setzeLevel(level, regal, regal, []);
+  speichere();
+}
+
+// Fortsetzen, wo aufgehört wurde
+function fortsetzen() {
+  const d = lade();
+  if (!d) { starteLevel(1); return; }
+  speicher.geschafft = Number.isInteger(d.geschafft) ? d.geschafft : 0;
+  speicher.einstellungen = d.einstellungen && typeof d.einstellungen === 'object' ? d.einstellungen : {};
+  if (d.regal && gueltigeAufstellung(d.regal, d.start) && !Puzzle.gewonnen(d.regal)) {
+    const n = d.regal.length;
+    const verlauf = Array.isArray(d.verlauf) && d.verlauf.every((z) => z && [z.a, z.b].every((x) => Number.isInteger(x) && x >= 0 && x < n) && Number.isInteger(z.anzahl) && z.anzahl > 0)
+      ? d.verlauf : [];
+    setzeLevel(d.level, d.start, d.regal, verlauf);
+  } else {
+    starteLevel(d.level);
+  }
 }
 
 $('knopfZurueck').addEventListener('click', zurueck);
@@ -1205,9 +1262,9 @@ $('knopfWeiter').addEventListener('click', () => {
 });
 
 // Für Tests und Fehlersuche
-window.Spiel = { spiel, Puzzle, tippe, zurueck, neuStarten, starteLevel };
+window.Spiel = { spiel, speicher, Puzzle, tippe, zurueck, neuStarten, starteLevel, lade };
 
-starteLevel(1);
+fortsetzen();
 </script>
 </body>
 </html>
